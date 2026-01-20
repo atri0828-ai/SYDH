@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>商业大亨 V5.0：金融风暴</title>
+    <title>商业大亨 V6.0：黑市风云</title>
     <style>
-        /* V5.0 样式升级 */
         body { background-color: #0d1117; color: #c9d1d9; font-family: 'Segoe UI', sans-serif; padding: 10px; max-width: 600px; margin: 0 auto; line-height: 1.5; }
+        .author-tag { text-align: center; font-size: 12px; color: #58a6ff; opacity: 0.7; margin: 10px 0; letter-spacing: 1px; font-weight: bold; }
         
         .header { background: #161b22; padding: 15px; border-radius: 12px; border: 1px solid #30363d; margin-bottom: 15px; position: relative;}
         .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; align-items: center; }
@@ -15,47 +15,48 @@
         .rank-badge { background: #238636; color: white; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;}
         
         .panel { background: #161b22; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #30363d; }
-        h3 { margin: 0 0 12px 0; color: #58a6ff; font-size: 16px; border-bottom: 1px solid #30363d; padding-bottom: 8px; display: flex; justify-content: space-between; align-items: center;}
+        h3 { margin: 0 0 12px 0; color: #58a6ff; font-size: 16px; border-bottom: 1px solid #30363d; padding-bottom: 8px; display: flex; justify-content: space-between;}
         
-        /* 按钮组 */
+        /* 按钮与颜色 */
         button { background: #21262d; color: #c9d1d9; border: 1px solid #30363d; padding: 6px 12px; margin: 2px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: all 0.2s;}
         button:active { transform: scale(0.96); }
         button:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
-        
         .btn-buy { background: #238636; color: white; border: none; }
         .btn-sell { background: #da3633; color: white; border: none; }
         .btn-max { background: #1f6feb; color: white; border: none; font-size: 11px; padding: 6px 8px;}
-        .btn-rest { background: #1f6feb; color: white; width: 100%; font-weight: bold; padding: 12px; margin: 0 0 10px 0;}
-        .btn-bank { position: absolute; top: 10px; right: 10px; background: #d29922; color: #000; font-weight: bold; border:none; box-shadow: 0 0 5px #d29922;}
+        .btn-bank { position: absolute; top: 10px; right: 10px; background: #d29922; color: #000; font-weight: bold; border:none; }
         
-        /* 颜色逻辑 */
+        /* V6.0 黑市样式 */
+        .btn-black-market { width: 100%; background: #3a0000; color: #ff5252; border: 1px solid #ff5252; font-weight: bold; margin-bottom: 10px; padding: 12px; }
+        .risk-tag { font-size: 10px; background: #5a0000; color: #ff5252; padding: 2px 5px; border-radius: 4px; border: 1px solid #ff5252; margin-left: 5px; }
+        .umbrella-tag { font-size: 11px; color: #a371f7; border: 1px solid #a371f7; padding: 1px 4px; border-radius: 4px; margin-left: 5px; }
+        
         .col-profit { color: #00e676; font-weight: bold; } 
         .col-loss { color: #ff5252; font-weight: bold; }   
-        .col-neutral { color: #ffffff; }                   
         
         .stock-tag { font-size: 11px; background: #333; padding: 1px 4px; border-radius: 4px; color: #aaa; margin-left: 5px;}
-        .visa-tag { background: #d29922; color: black; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; margin-left: 5px; }
-
+        .limit-bar { font-size: 12px; color: #ff7b72; border: 1px solid #ff7b72; padding: 2px 5px; border-radius: 4px; display: inline-block; margin-top: 5px;}
+        
         .item-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #21262d; }
         .city-btn { width:100%; text-align:left; display:flex; justify-content:space-between; margin:5px 0; padding: 10px; align-items: center;}
 
-        /* 弹窗 Modal */
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; }
-        .modal-box { background: #1c2128; padding: 20px; border-radius: 12px; border: 1px solid #444; width: 85%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
-        .modal-title { font-size: 18px; color: #58a6ff; margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 10px; }
-        .modal-content { font-size: 14px; margin-bottom: 20px; line-height: 1.6; text-align: left;}
-        .modal-input { width: 80%; padding: 8px; margin: 10px 0; background: #0d1117; border: 1px solid #30363d; color: white; border-radius: 4px; text-align: center;}
-        
+        /* 弹窗 */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 999; justify-content: center; align-items: center; }
+        .modal-box { background: #1c2128; padding: 20px; border-radius: 12px; border: 1px solid #444; width: 85%; max-width: 400px; text-align: center; }
         .log-area { height: 100px; overflow-y: auto; background: #0d1117; border: 1px solid #30363d; padding: 10px; font-size: 12px; color: #8b949e; border-radius: 6px; font-family: monospace; }
     </style>
 </head>
 <body>
 
+<div class="author-tag">作者: ATRI</div>
+
 <div id="modalOverlay" class="modal-overlay">
     <div class="modal-box">
-        <div id="modalTitle" class="modal-title">标题</div>
-        <div id="modalContent" class="modal-content">内容</div>
-        <div id="modalActions"></div>
+        <div id="modalTitle" style="font-size:18px;color:#58a6ff;margin-bottom:10px;border-bottom:1px solid #333;padding-bottom:5px;"></div>
+        <div id="modalContent" style="text-align:left;font-size:14px;margin-bottom:20px;"></div>
+        <div id="modalActions">
+            <button onclick="closeModal()" style="width:100%">确认</button>
+        </div>
     </div>
 </div>
 
@@ -74,652 +75,538 @@
         <span>🎒 容量: <span id="capDisplay">0/50</span></span>
         <button onclick="upgradeCapacity()" style="font-size:11px; padding:2px 8px; background:#333;">➕ 扩容</button>
     </div>
-</div>
-
-<div class="panel" id="upgradePanel">
-    <h3>📈 商业版图</h3>
-    <div id="upgradeInfo" style="font-size:13px; margin-bottom:10px; color:#8b949e;"></div>
-    <button id="btnUpgrade" style="width:100%; background:#d29922; color:black; font-weight:bold;" onclick="upgradeTitle()">升级头衔</button>
+    <div id="limitDisplayWrapper" style="display:none; text-align:center;">
+        <span id="limitDisplay" class="limit-bar">今日外地售卖额度: 0/100</span>
+    </div>
 </div>
 
 <div class="panel">
-    <h3>
-        <span>🌏 <span id="marketTitle">批发市场</span></span>
-    </h3>
-    <button class="btn-rest" onclick="restDay()">🛌 休息一天 (刷新市场)</button>
+    <button class="btn-black-market" onclick="openBlackMarket()">💀 进入黑市 (高风险)</button>
+    
+    <h3>🌏 正规市场 <button class="btn-rest" onclick="restDay()" style="width:auto; float:right; padding:4px 10px; margin:0;">🛌 休息</button></h3>
     <div id="marketList"></div>
 </div>
 
 <div class="panel">
-    <h3>✈️ 差旅与移民</h3>
-    <button style="width:100%; background:#1f6feb; color:white; margin-bottom:10px;" onclick="goHome()">🏠 紧急回国/回老家</button>
+    <h3>✈️ 移动与移民</h3>
+    <button style="width:100%; background:#30363d; color:white; margin-bottom:10px;" onclick="goHome()">🏠 紧急回家 (重置额度)</button>
     <div id="cityList"></div>
 </div>
 
 <div class="panel">
     <h3>💾 系统</h3>
+    <button onclick="shareAchievement()" style="background:#6f42c1; width:100%; margin-bottom:5px;">🏆 复制战绩</button>
     <button onclick="saveGame()">保存</button>
-    <button onclick="resetGame()" style="background:#da3633">重置</button>
+    <button onclick="exportSave()">导出</button>
+    <button onclick="importSave()">导入</button>
+    <button onclick="resetGame()" style="background:#da3633; float:right;">重置</button>
+    <textarea id="saveString" placeholder="存档码..." style="width:100%;height:30px;margin-top:5px;background:#222;color:#fff;border:none;"></textarea>
 </div>
 
 <div class="log-area" id="gameLog"></div>
+<div class="author-tag">作者: ATRI</div>
 
 <script>
-// === 1. 数据配置 ===
-// 城市配置：isForeign: true 代表国外
+// === 1. 数据配置 (V6.0 品牌化 + 黑市) ===
 const CITIES = [
     { name: "村口(老家)", dist: 0, reqRank: 0, isForeign: false },
-    { name: "县城市场", dist: 20, reqRank: 0, isForeign: false },
-    { name: "省会城市", dist: 300, reqRank: 1, isForeign: false },
-    { name: "南京", dist: 800, reqRank: 1, isForeign: false }, // 新增
-    { name: "西安", dist: 1000, reqRank: 2, isForeign: false }, // 新增
+    { name: "县城", dist: 20, reqRank: 0, isForeign: false },
+    { name: "省会", dist: 300, reqRank: 1, isForeign: false },
+    { name: "澳门", dist: 1200, reqRank: 2, isForeign: false }, // 新增
     { name: "深圳", dist: 1200, reqRank: 2, isForeign: false },
     { name: "首都", dist: 1500, reqRank: 3, isForeign: false },
-    { name: "哈尔滨", dist: 1800, reqRank: 3, isForeign: false }, // 新增
     { name: "首尔", dist: 2000, reqRank: 4, isForeign: true },
-    { name: "香港", dist: 2500, reqRank: 5, isForeign: false }, // 香港算国内长途
+    { name: "香港", dist: 2500, reqRank: 5, isForeign: false },
     { name: "东京", dist: 3000, reqRank: 6, isForeign: true },
-    { name: "新加坡", dist: 4000, reqRank: 6, isForeign: true }, // 新增
+    { name: "新加坡", dist: 4000, reqRank: 6, isForeign: true },
     { name: "迪拜", dist: 6000, reqRank: 8, isForeign: true },
-    { name: "莫斯科", dist: 7000, reqRank: 7, isForeign: true },
-    { name: "悉尼", dist: 8000, reqRank: 7, isForeign: true },
+    { name: "阿姆斯特丹", dist: 8500, reqRank: 8, isForeign: true }, // 新增
     { name: "伦敦", dist: 9500, reqRank: 9, isForeign: true },
-    { name: "纽约", dist: 12000, reqRank: 10, isForeign: true },
-    { name: "南极站", dist: 18000, reqRank: 10, isForeign: true }
+    { name: "洛杉矶", dist: 11000, reqRank: 9, isForeign: true }, // 新增
+    { name: "拉斯维加斯", dist: 11500, reqRank: 10, isForeign: true }, // 新增
+    { name: "纽约", dist: 12000, reqRank: 10, isForeign: true }
 ];
 
-// 头衔不再增加容量
 const RANKS = [
-    { name: "流动摊贩", cost: 0 },
-    { name: "小卖部", cost: 3000 },
-    { name: "便利店", cost: 10000 },
-    { name: "连锁商店", cost: 30000 },
-    { name: "小型超市", cost: 80000 },
-    { name: "大型超市", cost: 200000 }, // 等级5，解锁后屏蔽村口和县城
-    { name: "贸易公司", cost: 500000 },
-    { name: "进出口公司", cost: 1500000 },
-    { name: "跨国集团", cost: 5000000 },
-    { name: "商业帝国", cost: 20000000 },
-    { name: "世界首富", cost: 100000000 }
+    { name: "流动摊贩", cost: 0, limit: 100 },
+    { name: "小卖部", cost: 3000, limit: 3000 },
+    { name: "便利店", cost: 10000, limit: 8000 },
+    { name: "连锁商店", cost: 30000, limit: 25000 },
+    { name: "小型超市", cost: 80000, limit: 60000 },
+    { name: "大型超市", cost: 200000, limit: 150000 },
+    { name: "贸易公司", cost: 500000, limit: 500000 },
+    { name: "进出口公司", cost: 1500000, limit: 1500000 },
+    { name: "跨国集团", cost: 5000000, limit: 5000000 },
+    { name: "商业帝国", cost: 20000000, limit: 20000000 },
+    { name: "世界首富", cost: 100000000, limit: 999999999 }
 ];
 
+// 正规商品 (品牌化)
 const GOODS = [
-    { name: "矿泉水", base: 2, vol: 0.1, reqRank: 0, stockBase: 1000 },
-    { name: "火腿肠", base: 5, vol: 0.2, reqRank: 0, stockBase: 800 },
-    { name: "土特产", base: 50, vol: 0.3, reqRank: 0, stockBase: 200 },
-    { name: "雨花石", base: 80, vol: 0.4, reqRank: 1, stockBase: 100 }, // 南京
-    { name: "兵马俑仿品", base: 150, vol: 0.3, reqRank: 2, stockBase: 80 }, // 西安
-    { name: "电子表", base: 100, vol: 0.3, reqRank: 2, stockBase: 150 },
-    { name: "运动鞋", base: 300, vol: 0.3, reqRank: 2, stockBase: 60 },
-    { name: "平板电脑", base: 3000, vol: 0.4, reqRank: 3, stockBase: 40 },
-    { name: "茅台酒", base: 2500, vol: 0.5, reqRank: 3, stockBase: 30 },
-    { name: "人参", base: 1000, vol: 0.4, reqRank: 3, stockBase: 50 }, // 哈尔滨
-    { name: "化妆品", base: 1500, vol: 0.4, reqRank: 4, stockBase: 50 },
-    { name: "游戏显卡", base: 5000, vol: 0.6, reqRank: 5, stockBase: 15 },
-    { name: "单反相机", base: 15000, vol: 0.4, reqRank: 6, stockBase: 10 },
-    { name: "伏特加", base: 800, vol: 0.5, reqRank: 7, stockBase: 120 },
-    { name: "澳洲羊毛", base: 4000, vol: 0.3, reqRank: 7, stockBase: 60 },
-    { name: "黄金饰品", base: 30000, vol: 0.3, reqRank: 8, stockBase: 8 },
-    { name: "定制西装", base: 20000, vol: 0.4, reqRank: 9, stockBase: 15 },
-    { name: "奢侈名包", base: 50000, vol: 0.5, reqRank: 10, stockBase: 5 },
-    { name: "AI芯片", base: 200000, vol: 0.7, reqRank: 10, stockBase: 3 },
-    { name: "陨石样本", base: 500000, vol: 0.8, reqRank: 10, stockBase: 1 }
+    { name: "废报纸", base: 1, vol: 0.1, reqRank: 0, stockBase: 2000 },
+    { name: "农夫山泉", base: 2, vol: 0.1, reqRank: 0, stockBase: 1000 },
+    { name: "双汇火腿", base: 5, vol: 0.2, reqRank: 0, stockBase: 800 },
+    { name: "红塔山烟", base: 15, vol: 0.1, reqRank: 0, stockBase: 500 }, // 新增
+    { name: "小米充电宝", base: 80, vol: 0.2, reqRank: 1, stockBase: 200 },
+    { name: "卡西欧手表", base: 300, vol: 0.3, reqRank: 1, stockBase: 100 }, // 替换电子表
+    { name: "耐克球鞋", base: 500, vol: 0.3, reqRank: 2, stockBase: 60 },
+    { name: "Switch游戏机", base: 1800, vol: 0.3, reqRank: 2, stockBase: 50 }, // 新增
+    { name: "飞天茅台", base: 2800, vol: 0.5, reqRank: 3, stockBase: 30 },
+    { name: "iPad Air", base: 4000, vol: 0.4, reqRank: 3, stockBase: 40 },
+    { name: "雅诗兰黛", base: 1500, vol: 0.4, reqRank: 4, stockBase: 50 },
+    { name: "大疆无人机", base: 6000, vol: 0.5, reqRank: 4, stockBase: 20 },
+    { name: "索尼电视", base: 8000, vol: 0.3, reqRank: 5, stockBase: 15 },
+    { name: "RTX5090显卡", base: 15000, vol: 0.6, reqRank: 5, stockBase: 10 },
+    { name: "佳能单反", base: 18000, vol: 0.4, reqRank: 6, stockBase: 10 },
+    { name: "戴森全套", base: 5000, vol: 0.3, reqRank: 6, stockBase: 20 }, // 新增
+    { name: "绝对伏特加", base: 800, vol: 0.5, reqRank: 7, stockBase: 120 },
+    { name: "劳力士绿水鬼", base: 80000, vol: 0.3, reqRank: 8, stockBase: 5 },
+    { name: "阿玛尼西装", base: 30000, vol: 0.4, reqRank: 9, stockBase: 15 },
+    { name: "特斯拉Model Y", base: 250000, vol: 0.2, reqRank: 9, stockBase: 3 }, // 新增
+    { name: "爱马仕铂金包", base: 150000, vol: 0.5, reqRank: 10, stockBase: 5 },
+    { name: "英伟达AI芯片", base: 300000, vol: 0.7, reqRank: 10, stockBase: 2 },
+    { name: "SpaceX组件", base: 5000000, vol: 0.2, reqRank: 10, stockBase: 1 }
 ];
 
-// === 2. 玩家状态 ===
+// 黑市商品 (独立数组)
+const BLACK_GOODS = [
+    { name: "假烟", base: 200, risk: 5 },
+    { name: "假酒", base: 500, risk: 5 },
+    { name: "违法长刀", base: 1500, risk: 8 },
+    { name: "假钞", base: 5000, risk: 20 },
+    { name: "违法气枪", base: 8000, risk: 25 },
+    { name: "毒品", base: 50000, risk: 75 }
+];
+
 let player = {
-    companyName: null,
-    day: 1,
-    money: 1000,
-    cityIdx: 0,
-    homeIdx: 0, // 新增：家的位置
-    inventory: {}, 
-    marketData: {},
-    rankIdx: 0,
-    capacity: 50, // 初始容量单独计算
-    // 银行数据
-    bank: {
-        deposit: 0,
-        loan: 0,
-        loanDeadline: 0 // 还款截止日（Day）
-    },
-    // 签证数据
-    visa: {
-        daysLeft: 0,
-        active: false
-    }
+    companyName: null, day: 1, money: 1000, cityIdx: 0, homeIdx: 0, 
+    inventory: {}, marketData: {}, rankIdx: 0, capacity: 50,
+    bank: {deposit:0, loan:0, loanDeadline:0}, 
+    visa: {daysLeft:0, active:false},
+    dailySales: 0,
+    // V6.0 新增
+    protection: 0, // 保护伞等级 (0, 1=5%, 2=15%)
+    blackWarned: false, // 是否看过黑市警告
+    blackMarketData: {} // 黑市行情
 };
 
-// === 3. 初始化 ===
 window.onload = function() {
     loadGame();
+    if(typeof player.dailySales === 'undefined') player.dailySales = 0;
+    if(typeof player.protection === 'undefined') player.protection = 0;
+    
     if (!player.companyName) {
-        render();
         setTimeout(() => {
-            let name = "";
-            while (!name) name = prompt("👋 欢迎老板！请注册公司名称：", "未命名企业");
-            player.companyName = name;
-            render(); saveGame();
+            let n = prompt("👋 欢迎老板！请注册公司名称：", "ATRI贸易");
+            player.companyName = n || "未命名"; render(); saveGame();
         }, 100);
     }
-    if (!player.marketData || Object.keys(player.marketData).length === 0) updateMarket();
-    // 兼容旧存档
-    if(!player.bank) player.bank = { deposit:0, loan:0, loanDeadline:0 };
-    if(!player.capacity) player.capacity = 50 + (player.rankIdx * 50); // 补偿旧版本容量
-    if(!player.visa) player.visa = { daysLeft: 0, active: false };
-    if(typeof player.homeIdx === 'undefined') player.homeIdx = 0;
-
-    fixInventoryData(); 
+    if (Object.keys(player.marketData).length === 0) updateMarket(true);
     render();
-    if(document.getElementById("gameLog").innerHTML === "") log(`> V5.0 金融风暴已加载。当前基地：${CITIES[player.homeIdx].name}`);
 };
 
-// === 4. 核心逻辑 ===
-
-// 刷新市场
-function updateMarket(isEvent = false) {
-    let newMarket = {};
-    GOODS.forEach(good => {
-        if (good.reqRank <= player.rankIdx + 1) { 
-            let change = (Math.random() - 0.5) * 2 * good.vol;
-            let finalPrice = Math.floor(good.base * (1 + change));
-            if (finalPrice < 1) finalPrice = 1;
-
-            let stock = Math.floor(good.stockBase * (0.5 + Math.random()));
-            if (good.reqRank >= 5 && Math.random() < 0.25) stock = 0; 
-
-            newMarket[good.name] = { price: finalPrice, stock: stock };
+function updateMarket(init = false) {
+    // 正规市场
+    let newM = {};
+    GOODS.forEach(g => {
+        if (g.reqRank <= player.rankIdx + 1) {
+            let p = Math.floor(g.base * (1 + (Math.random()-0.5)*2*g.vol));
+            if(p<1) p=1;
+            let s = Math.floor(g.stockBase * (0.5+Math.random()));
+            if(g.reqRank>=5 && Math.random()<0.25) s=0;
+            newM[g.name] = { price: p, stock: s };
         }
     });
-    player.marketData = newMarket;
-    
-    // 如果不是随机事件触发的刷新，则尝试触发随机事件
-    if (!isEvent) triggerRandomEvent();
+    player.marketData = newM;
+
+    // 黑市行情 (V6.0)
+    let newB = {};
+    BLACK_GOODS.forEach(g => {
+        let p = Math.floor(g.base * (1 + (Math.random()-0.5)*1.5)); // 波动极大
+        let s = Math.floor(Math.random() * 8) + 1; // 库存不超过8
+        newB[g.name] = { price: p, stock: s, risk: g.risk };
+    });
+    player.blackMarketData = newB;
+
+    if(!init) triggerRandomEvent();
 }
 
-// 每日结算（利息、签证）
-function processDailyLogic() {
+function processDaily() {
     player.day++;
-    
-    // 1. 银行结算
-    if (player.bank.deposit > 0) {
-        let interest = Math.floor(player.bank.deposit * 0.005);
-        player.bank.deposit += interest;
-    }
+    if (player.bank.deposit > 0) player.bank.deposit += Math.floor(player.bank.deposit * 0.005);
     if (player.bank.loan > 0) {
-        let interest = Math.floor(player.bank.loan * 0.02);
-        player.bank.loan += interest;
-        
-        // 检查死期
+        player.bank.loan += Math.floor(player.bank.loan * 0.02);
         if (player.day > player.bank.loanDeadline) {
-            alert("🚓 警察：你因恶意拖欠巨额银行贷款被捕入狱！\n\nGAME OVER");
-            resetGame();
-            return false; // 游戏结束
+            alert("🚓 逾期未还，破产被捕！");
+            resetGame(); return false;
         }
     }
-
-    // 2. 签证结算 (如果是国外 且 不是家)
     let curCity = CITIES[player.cityIdx];
     if (curCity.isForeign && player.cityIdx !== player.homeIdx) {
         player.visa.daysLeft--;
         if (player.visa.daysLeft <= 0) {
-            alert("🛂 移民局：你的签证已过期！强制遣返！");
-            goHome(true); // 强制遣返
-            return false;
+            alert("🛂 签证过期，强制遣返！");
+            goHome(true); return false;
         }
     }
     return true;
 }
 
 function restDay() {
-    if(!processDailyLogic()) return;
+    if(!processDaily()) return;
     updateMarket();
-    log("💤 休息一天，利息已结算。");
-    render();
-    saveGame();
+    if(player.cityIdx === player.homeIdx) player.dailySales = 0;
+    log("💤 休息了一天。");
+    render(); saveGame();
 }
 
-// 随机事件系统
-function triggerRandomEvent() {
-    if (Math.random() > 0.1) return; // 10% 几率触发
-
-    const events = [
-        { title: "📉 金融危机", text: "全球股市崩盘！商品价格暴涨，库存减半。", effect: () => { 
-            for(let k in player.marketData) {
-                player.marketData[k].price = Math.floor(player.marketData[k].price * 1.5);
-                player.marketData[k].stock = Math.floor(player.marketData[k].stock * 0.5);
-            }
-        }},
-        { title: "📈 经济繁荣", text: "市场需求旺盛，所有商品价格下跌，库存翻倍！", effect: () => {
-             for(let k in player.marketData) {
-                player.marketData[k].price = Math.floor(player.marketData[k].price * 0.7);
-                player.marketData[k].stock = Math.floor(player.marketData[k].stock * 2);
-            }
-        }},
-        { title: "🥷 遭遇强盗", text: "你在小巷子里被抢了！损失现金 ¥1000。", effect: () => {
-            player.money = Math.max(0, player.money - 1000);
-        }},
-        { title: "💸 意外之财", text: "你在路边捡到了一个钱包。获得 ¥2000。", effect: () => {
-            player.money += 2000;
-        }},
-        { title: "🚔 税务稽查", text: "税务局认为你有偷税嫌疑，罚款当前资金的 5%。", effect: () => {
-            let fine = Math.floor(player.money * 0.05);
-            player.money -= fine;
-        }},
-        { title: "🎰 彩票中奖", text: "天呐！你买的彩票中了二等奖！获得 ¥50,000！", effect: () => {
-            player.money += 50000;
-        }},
-        { title: "🌧️ 仓库受潮", text: "暴雨导致仓库漏水，损失了部分商品（如果有的话）。", effect: () => {
-            let keys = Object.keys(player.inventory);
-            if (keys.length > 0) {
-                let k = keys[Math.floor(Math.random()*keys.length)];
-                let lost = Math.ceil(player.inventory[k].count * 0.2);
-                player.inventory[k].count -= lost;
-                if(player.inventory[k].count<=0) delete player.inventory[k];
-                log(`受潮损失了 ${lost} 个 ${k}`);
-            }
-        }},
-        { title: "🎁 慈善晚宴", text: "你被邀请参加慈善晚宴，强制捐款 ¥500 以提升名誉。", effect: () => {
-            player.money = Math.max(0, player.money - 500);
-        }},
-        { title: "🦠 流行感冒", text: "你生病了，去医院花费了 ¥3000 医药费。", effect: () => {
-            player.money = Math.max(0, player.money - 3000);
-        }},
-        { title: "📦 供货商跑路", text: "一家供货商跑路了，某个商品在市场上彻底断货。", effect: () => {
-            let keys = Object.keys(player.marketData);
-            let k = keys[Math.floor(Math.random()*keys.length)];
-            player.marketData[k].stock = 0;
-        }}
-    ];
-
-    let evt = events[Math.floor(Math.random() * events.length)];
-    evt.effect();
-    showModal(evt.title, evt.text);
+// === V6.0 黑市逻辑 ===
+function openBlackMarket() {
+    if (!player.blackWarned) {
+        let content = `
+            <div style="color:#ff5252; font-weight:bold; text-align:center; margin-bottom:10px;">⚠️ 严重警告</div>
+            <p>你即将进入地下黑市。这里出售的商品（假钞、毒品等）均为严重违法物品。</p>
+            <p>1. 任何买卖行为都有几率导致被警察当场逮捕。</p>
+            <p>2. 一旦被逮捕，<b>游戏直接结束</b>（删档）。</p>
+            <p>3. 违禁品总携带数量不能超过 10 个。</p>
+            <p style="color:#aaa; font-size:12px; margin-top:10px;">警告：本游戏内容纯属虚构，现实生活中请勿模仿！远离毒品，珍爱生命！</p>
+        `;
+        document.getElementById('modalTitle').innerText = "⚖️ 法律风险提示";
+        document.getElementById('modalContent').innerHTML = content;
+        document.getElementById('modalActions').innerHTML = `<button onclick="confirmBlackMarket()" style="background:#da3633; color:white;">我已知晓后果，进入</button>`;
+        document.getElementById('modalOverlay').style.display = 'flex';
+    } else {
+        showBlackMarketModal();
+    }
 }
 
-// === 银行系统 ===
-function openBank() {
+function confirmBlackMarket() {
+    player.blackWarned = true;
+    closeModal();
+    setTimeout(showBlackMarketModal, 200);
+}
+
+function showBlackMarketModal() {
+    let umbrellaText = "无";
+    if (player.protection == 1) umbrellaText = "初级 (5%免罪)";
+    if (player.protection == 2) umbrellaText = "高级 (15%免罪)";
+
     let html = `
-        <p>现金: <span class="money">¥${player.money.toLocaleString()}</span></p>
-        <div style="background:#222; padding:10px; margin-bottom:10px; border-radius:6px;">
-            <div style="color:#00e676">存款: ¥${player.bank.deposit.toLocaleString()}</div>
-            <div style="font-size:11px; color:#888">日利率 0.5%</div>
-            <div style="margin-top:5px;">
-                <button onclick="bankAction('deposit')">存钱</button>
-                <button onclick="bankAction('withdraw')">取钱</button>
+        <div style="background:#2d0000; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #5a0000;">
+            <div style="font-size:12px; color:#aaa;">当前保护伞: <span style="color:#a371f7; font-weight:bold;">${umbrellaText}</span></div>
+            <div style="display:flex; justify-content:space-between; margin-top:5px;">
+                <button onclick="buyProtection(1)" style="font-size:10px; flex:1; margin-right:5px;">💴 10万贿赂 (5%)</button>
+                <button onclick="buyProtection(2)" style="font-size:10px; flex:1;">💴 100万贿赂 (15%)</button>
             </div>
         </div>
-        <div style="background:#222; padding:10px; border-radius:6px;">
-            <div style="color:#ff5252">贷款: ¥${player.bank.loan.toLocaleString()}</div>
-            <div style="font-size:11px; color:#888">日利率 2.0% | 截止: 第${player.bank.loanDeadline||'--'}天</div>
-            <div style="margin-top:5px;">
-                ${player.bank.loan > 0 
-                  ? `<button onclick="bankAction('repay')">还款</button>`
-                  : `<button onclick="bankAction('borrow')">申请贷款</button>`
-                }
-            </div>
-        </div>
+        <div style="font-size:12px; color:#ff5252; margin-bottom:10px;">⚠️ 违禁品只能存10个，交易有被捕风险！</div>
     `;
-    showModal("🏦 瑞士银行", html);
+
+    BLACK_GOODS.forEach(g => {
+        let mk = player.blackMarketData[g.name];
+        let inv = player.inventory[g.name] || {c:0, cost:0};
+        
+        // 逮捕几率颜色
+        let riskColor = g.risk > 20 ? "#ff0000" : "#ff7b72";
+        
+        html += `
+        <div class="item-row" style="border-bottom:1px solid #5a0000;">
+            <div style="width:40%">
+                <div style="color:#ffb0b0; font-weight:bold;">${g.name} <span class="risk-tag">被捕率 ${g.risk}%</span></div>
+                <div style="font-size:11px; color:#888">持: ${inv.c} | 余: ${mk.stock}</div>
+            </div>
+            <div style="width:20%; color:#fff; font-weight:bold;">¥${mk.price}</div>
+            <div style="width:40%; text-align:right;">
+                <button onclick="tradeBlack('${g.name}', -1)" style="background:#5a0000; border-color:#ff5252; color:#fff; padding:2px 8px;">卖</button>
+                <button onclick="tradeBlack('${g.name}', 1)" style="background:#3a0000; border-color:#ff5252; color:#fff; padding:2px 8px;" ${mk.stock<=0?'disabled':''}>买</button>
+            </div>
+        </div>`;
+    });
+
+    document.getElementById('modalTitle').innerText = "💀 地下黑市";
+    document.getElementById('modalContent').innerHTML = html;
+    document.getElementById('modalActions').innerHTML = `<button onclick="closeModal()">离开</button>`;
+    document.getElementById('modalOverlay').style.display = 'flex';
 }
 
-function bankAction(type) {
-    let val = 0;
-    if (type === 'deposit') {
-        val = parseInt(prompt("请输入存款金额（全部存入输 -1）：", "0"));
-        if (val === -1) val = player.money;
-        if (val > 0 && val <= player.money) {
-            player.money -= val; player.bank.deposit += val;
-            alert("存款成功！");
-        }
-    } else if (type === 'withdraw') {
-        val = parseInt(prompt("请输入取款金额：", "0"));
-        if (val > 0 && val <= player.bank.deposit) {
-            player.bank.deposit -= val; player.money += val;
-            alert("取款成功！");
-        }
-    } else if (type === 'borrow') {
-        let maxLoan = player.money * 5;
-        val = parseInt(prompt(`请输入贷款金额 (最高 ¥${maxLoan})：`, maxLoan));
-        if (val > 0 && val <= maxLoan) {
-            player.money += val;
-            player.bank.loan += val;
-            player.bank.loanDeadline = player.day + 30; // 30天期限
-            alert("贷款成功！请在30天内还清，否则后果自负。");
-        }
-    } else if (type === 'repay') {
-        val = parseInt(prompt(`请输入还款金额 (欠款 ¥${player.bank.loan})：`, player.bank.loan));
-        if (val > 0 && val <= player.money) {
-            // 不能还多
-            val = Math.min(val, player.bank.loan);
-            player.money -= val;
-            player.bank.loan -= val;
-            if (player.bank.loan <= 0) player.bank.loanDeadline = 0;
-            alert("还款成功！");
+function buyProtection(level) {
+    let cost = level === 1 ? 100000 : 1000000;
+    if (player.money < cost) { alert("资金不足！"); return; }
+    if (player.protection >= level) { alert("你已经拥有同级或更高级的保护伞了！"); return; }
+    
+    if (confirm(`花费 ¥${cost} 疏通关系？`)) {
+        player.money -= cost;
+        player.protection = level;
+        alert("打点成功！现在你有 " + (level==1?"5%":"15%") + " 的几率在被捕后获救。");
+        showBlackMarketModal(); // 刷新界面
+        render(); saveGame();
+    }
+}
+
+function getIllegalCount() {
+    let count = 0;
+    BLACK_GOODS.forEach(g => {
+        if (player.inventory[g.name]) count += player.inventory[g.name].c;
+    });
+    return count;
+}
+
+function tradeBlack(n, amt) {
+    // 1. 风险判定 (买卖都要判)
+    let goodInfo = BLACK_GOODS.find(g => g.name === n);
+    let risk = goodInfo.risk;
+    
+    // 随机数 0-99
+    let roll = Math.floor(Math.random() * 100);
+    if (roll < risk) {
+        // 触发被捕！检查保护伞
+        let saveRoll = Math.floor(Math.random() * 100);
+        let saveChance = player.protection === 1 ? 5 : (player.protection === 2 ? 15 : 0);
+        
+        if (saveRoll < saveChance) {
+            alert(`🚓 警察突击检查！你被抓了！\n\n...但是你的“保护伞”起作用了，他们把你放了。\n(失去本次交易机会)`);
+            return; 
+        } else {
+            alert(`🚓 交易现场被警察包围！\n你因倒卖【${n}】被当场逮捕！\n\n保护伞未能生效。\n\n=== GAME OVER ===`);
+            resetGame();
+            return;
         }
     }
-    openBank(); // 刷新界面
-    render();
-    saveGame();
+
+    // 2. 正常交易逻辑
+    let mk = player.blackMarketData[n];
+    if (!player.inventory[n]) player.inventory[n] = { c: 0, cost: 0 };
+    let inv = player.inventory[n];
+
+    if (amt > 0) { // 买
+        if (getIllegalCount() + amt > 10) { alert("违禁品携带总数不能超过 10 个！"); return; }
+        if (mk.stock < amt) { alert("库存不足"); return; }
+        if (player.money < mk.price) { alert("没钱"); return; }
+        
+        player.money -= mk.price;
+        inv.c += amt;
+        inv.cost = mk.price; // 简单均价
+        player.blackMarketData[n].stock -= amt;
+        log(`💀 购入 ${n} (风险鉴定通过)`);
+    } else { // 卖
+        if (inv.c <= 0) return;
+        player.money += mk.price;
+        inv.c -= 1;
+        if(inv.c === 0) delete player.inventory[n];
+        log(`💀 售出 ${n} (获得 ¥${mk.price})`);
+    }
+    showBlackMarketModal();
+    render(); saveGame();
 }
 
-// === 渲染与界面 ===
+// === 通用交易 ===
+function trade(n, amt) {
+    let mk = player.marketData[n];
+    if (!mk) return;
+    if (!player.inventory[n]) player.inventory[n] = { c: 0, cost: 0 };
+    let inv = player.inventory[n];
+
+    if (amt === 999) { 
+        let maxAfford = Math.floor(player.money / mk.price);
+        let maxSpace = player.capacity - getInv();
+        amt = Math.min(maxAfford, maxSpace, mk.stock);
+        if (amt <= 0) return log("❌ 无法购买");
+    }
+    if (amt === -999) { amt = -inv.c; if (amt === 0) return; }
+
+    if (amt > 0) {
+        if (mk.stock < amt) return log("❌ 库存不足");
+        if (getInv() + amt > player.capacity) return log("❌ 仓库已满");
+        if (player.money < amt * mk.price) return log("❌ 资金不足");
+        let cost = amt * mk.price;
+        inv.cost = (inv.c * inv.cost + cost) / (inv.c + amt);
+        inv.c += amt;
+        player.money -= cost;
+        player.marketData[n].stock -= amt;
+        log(`🛒 买入 ${amt} ${n}`);
+    } else {
+        let sellAmt = Math.abs(amt);
+        if (inv.c < sellAmt) return;
+        let totalVal = sellAmt * mk.price;
+
+        if (player.cityIdx !== player.homeIdx) {
+            let maxLimit = RANKS[player.rankIdx].limit;
+            if (player.dailySales + totalVal > maxLimit) {
+                let left = maxLimit - player.dailySales;
+                showModal("🚫 贸易限额警告", `外地限额剩余：<b>¥${left}</b><br>本次交易超额！请回老家重置。`);
+                return;
+            }
+            player.dailySales += totalVal;
+        }
+
+        player.money += totalVal;
+        inv.c -= sellAmt;
+        if (inv.c === 0) delete player.inventory[n];
+        let profit = (mk.price - inv.cost) * sellAmt;
+        log(`💰 卖出 ${sellAmt} ${n} (赚${profit>=0?'+':''}${parseInt(profit)})`);
+    }
+    render(); saveGame();
+}
+
+function travel(i) {
+    let target = CITIES[i];
+    let dist = Math.abs(target.dist - CITIES[player.cityIdx].dist);
+    let cost = dist <= 50 ? 20 : Math.floor(dist * 1.5 + 100);
+    if (player.money < cost) return log("❌ 路费不够");
+    
+    let vDays = 0;
+    if (target.isForeign && i !== player.homeIdx) {
+        vDays = Math.min(8, Math.floor(player.money / 10000));
+        if (vDays < 1) return alert("资产不足1万，拒签！");
+        if (!confirm(`去 ${target.name} 路费 ¥${cost}，签证 ${vDays} 天？`)) return;
+    } else {
+        if (!confirm(`去 ${target.name} 路费 ¥${cost}？`)) return;
+    }
+
+    if(!processDaily()) return;
+    player.money -= cost;
+    player.cityIdx = i;
+    player.visa = (vDays > 0) ? { active: true, daysLeft: vDays } : { active: false, daysLeft: 0 };
+    if (i === player.homeIdx) { player.dailySales = 0; log("🏠 回家，额度重置！"); }
+    else log(`✈️ 到达 ${target.name}`);
+    updateMarket(); render(); saveGame();
+}
+
+// 辅助函数
+function closeModal() { document.getElementById('modalOverlay').style.display='none'; }
+function moveHome(i, cost) {
+    if (player.money < cost) return alert("没钱移民");
+    if (confirm(`花费 ¥${cost} 移民到 ${CITIES[i].name}？`)) {
+        player.money -= cost; player.homeIdx = i; player.cityIdx = i;
+        player.visa = { active: false, daysLeft: 0 };
+        processDaily(); player.dailySales = 0; updateMarket(); render(); saveGame();
+    }
+}
+function goHome(force) {
+    let t = player.homeIdx;
+    if(player.rankIdx>=5 && t<=1) t=2;
+    if(player.cityIdx==t) return;
+    let cost = Math.abs(CITIES[t].dist - CITIES[player.cityIdx].dist) * 1.5 + 100;
+    if(force) { player.money -= cost; player.cityIdx = t; player.visa={active:false,daysLeft:0}; player.dailySales=0; render(); saveGame(); return; }
+    travel(t);
+}
+function upgradeCapacity() {
+    let c = player.capacity * 100;
+    if (player.money >= c) { player.money -= c; player.capacity += 10; render(); saveGame(); } else alert("扩容需 ¥" + c);
+}
+function upgradeTitle() {
+    let n = player.rankIdx + 1;
+    if (player.money >= RANKS[n].cost) { player.money -= RANKS[n].cost; player.rankIdx = n; render(); saveGame(); }
+}
+function getInv() { 
+    let t=0; 
+    // 只计算正规商品占用容量 (违禁品独立计数，不占普通背包，但限制10个)
+    for(let k in player.inventory) {
+        if(!BLACK_GOODS.find(b=>b.name===k)) t+=player.inventory[k].c;
+    }
+    return t; 
+}
+function renderUp() {
+    let n = player.rankIdx + 1;
+    if (n < RANKS.length) {
+        document.getElementById("upgradeInfo").innerText = `下级:${RANKS[n].name} (限额:¥${RANKS[n].limit})`;
+        document.getElementById("btnUpgrade").innerText = `晋升 ¥${RANKS[n].cost}`;
+        document.getElementById("btnUpgrade").disabled = player.money < RANKS[n].cost;
+        document.getElementById("upgradePanel").style.display = "block";
+    } else { document.getElementById("upgradePanel").style.display = "none"; }
+}
+function triggerRandomEvent() {
+    if(Math.random()>0.1) return;
+    let evs = [
+        {t:"金融危机",b:"物价暴涨库存减半",f:()=>{for(let k in player.marketData){player.marketData[k].price=Math.floor(player.marketData[k].price*1.5);player.marketData[k].stock=Math.floor(player.marketData[k].stock*0.5)}}},
+        {t:"强盗",b:"被抢¥1000",f:()=>{player.money=Math.max(0,player.money-1000)}},
+        {t:"彩票",b:"中奖¥5000",f:()=>{player.money+=5000}}
+    ];
+    let e = evs[Math.floor(Math.random()*evs.length)];
+    e.f(); showModal(e.t, e.b);
+}
+function openBank(){
+    let s = `现金: ¥${player.money}\n存款: ¥${player.bank.deposit}\n欠款: ¥${player.bank.loan}`;
+    let c = prompt(s + "\n1.存 2.取 3.贷 4.还");
+    if(c==1){let v=prompt("存多少?");if(v<=player.money){player.money-=v;player.bank.deposit+=v*1}}
+    if(c==2){let v=prompt("取多少?");if(v<=player.bank.deposit){player.bank.deposit-=v;player.money+=v*1}}
+    if(c==3){let v=prompt("贷多少?");if(v<=player.money*5){player.money+=v*1;player.bank.loan+=v*1;player.bank.loanDeadline=player.day+30}}
+    if(c==4){let v=prompt("还多少?");if(v<=player.money){player.money-=v;player.bank.loan-=v;if(player.bank.loan<=0)player.bank.loanDeadline=0}}
+    render(); saveGame();
+}
+function shareAchievement(){
+    let txt=`🚀【${player.companyName}】V6.0战报：\n资产¥${(player.money+player.bank.deposit-player.bank.loan)}\n头衔:${RANKS[player.rankIdx].name}\n作者: ATRI`;
+    let i=document.createElement('textarea');i.value=txt;document.body.appendChild(i);i.select();document.execCommand('copy');document.body.removeChild(i);
+    alert("已复制！");
+}
+function showModal(t,b){ document.getElementById('modalTitle').innerText=t; document.getElementById('modalContent').innerHTML=b; document.getElementById('modalActions').innerHTML='<button onclick="closeModal()" style="width:100%">确认</button>'; document.getElementById('modalOverlay').style.display='flex'; }
+function log(m){ let b=document.getElementById('gameLog'); b.innerHTML=`<div>${m}</div>`+b.innerHTML; }
+function saveGame(){ localStorage.setItem("tycoon_v60", JSON.stringify(player)); }
+function loadGame(){ let d=localStorage.getItem("tycoon_v60"); if(!d)d=localStorage.getItem("tycoon_v53"); if(d)player=JSON.parse(d); }
+function resetGame(){ if(confirm("重来?")) { localStorage.removeItem("tycoon_v60"); location.reload(); } }
+function exportSave(){ document.getElementById('saveString').value = btoa(encodeURIComponent(JSON.stringify(player))); }
+function importSave(){ try{player=JSON.parse(decodeURIComponent(atob(document.getElementById('saveString').value)));saveGame();render();alert("成功")}catch(e){alert("无效")} }
+
 function render() {
     let curCity = CITIES[player.cityIdx];
     let curRank = RANKS[player.rankIdx];
     let isHome = player.cityIdx === player.homeIdx;
-    
-    // 签证显示
-    let visaText = "";
-    if (curCity.isForeign && !isHome) {
-        visaText = `<span class="visa-tag">签证: ${player.visa.daysLeft}天</span>`;
-    } else if (isHome) {
-        visaText = `<span class="stock-tag">🏠 Base</span>`;
-    }
 
     document.getElementById("companyDisplay").innerText = player.companyName || "未命名";
     document.getElementById("dayDisplay").innerText = player.day;
     document.getElementById("moneyDisplay").innerText = "¥" + player.money.toLocaleString();
-    document.getElementById("locDisplay").innerHTML = curCity.name + visaText;
+    let visaText = (curCity.isForeign && !isHome) ? ` (签证${player.visa.daysLeft}天)` : (isHome ? " (基地)" : "");
+    document.getElementById("locDisplay").innerText = curCity.name + visaText;
     document.getElementById("titleDisplay").innerText = curRank.name;
-    
-    let itemsCount = getInventoryCount();
-    document.getElementById("capDisplay").innerText = `${itemsCount}/${player.capacity}`;
-    document.getElementById("capDisplay").style.color = itemsCount >= player.capacity ? "#ff5252" : "#8b949e";
+    document.getElementById("capDisplay").innerText = getInv() + "/" + player.capacity;
 
-    // 商品列表
-    let listHtml = "";
+    let limitBox = document.getElementById("limitDisplayWrapper");
+    let limitText = document.getElementById("limitDisplay");
+    if (!isHome) {
+        limitBox.style.display = "block";
+        limitText.innerText = `今日外地限额: ${player.dailySales} / ${curRank.limit}`;
+        limitText.style.color = player.dailySales >= curRank.limit ? "#da3633" : "#ff7b72";
+    } else { limitBox.style.display = "none"; }
+
+    let h = "";
     let visibleGoods = GOODS.filter(g => g.reqRank <= player.rankIdx + 1);
-    
-    visibleGoods.forEach(good => {
-        let marketItem = player.marketData[good.name];
-        if (!marketItem) marketItem = { price: good.base, stock: 0 };
-        
-        let itemData = player.inventory[good.name]; 
-        let ownCount = itemData ? itemData.count : 0;
-        let avgCost = itemData ? itemData.cost : 0;
-        let isLocked = good.reqRank > player.rankIdx;
-        
-        if (!isLocked) {
-            let priceClass = "col-neutral";
-            if (ownCount > 0) {
-                if (marketItem.price > avgCost) priceClass = "col-profit";
-                else if (marketItem.price < avgCost) priceClass = "col-loss";
-            } else {
-                if (marketItem.price > good.base) priceClass = "col-profit";
-                else if (marketItem.price < good.base) priceClass = "col-loss";
-            }
+    visibleGoods.forEach(g => {
+        let mk = player.marketData[g.name] || {price:g.base, stock:0};
+        let inv = player.inventory[g.name] || {c:0, cost:0};
+        let pClass = inv.c>0 ? (mk.price > inv.cost ? "col-profit" : "col-loss") : (mk.price > g.base ? "col-profit" : "col-loss");
+        let stockHtml = mk.stock>0 ? `<span class="stock-tag">余:${mk.stock}</span>` : `<span style="color:#666">❌</span>`;
+        let profitInfo = inv.c>0 ? `<br><small style="color:#888">本:¥${parseInt(inv.cost)}</small>` : "";
 
-            let profitInfo = "";
-            if (ownCount > 0) {
-                let diff = marketItem.price - avgCost;
-                let diffStr = diff > 0 ? `+${parseInt(diff)}` : `${parseInt(diff)}`;
-                let pClass = diff > 0 ? "col-profit" : (diff < 0 ? "col-loss" : "");
-                profitInfo = `<div style="font-size:11px; color:#888">均价 ¥${parseInt(avgCost)} <span class="${pClass}">(${diffStr})</span></div>`;
-            }
-
-            let stockHtml = marketItem.stock > 0 ? `<span class="stock-tag">余:${marketItem.stock}</span>` : `<span class="sold-out">❌</span>`;
-            
-            listHtml += `
-            <div class="item-row">
-                <div style="width:35%">
-                    <div style="font-weight:bold">${good.name} ${stockHtml}</div>
-                    <div style="font-size:12px; color:#888">持: <span style="color:#e0e0e0">${ownCount}</span></div>
-                    ${profitInfo}
-                </div>
-                <div style="width:25%; text-align:center;">
-                    <div class="${priceClass}" style="font-size:16px;">¥${marketItem.price.toLocaleString()}</div>
-                </div>
-                <div style="width:40%; text-align:right;">
-                    <button class="btn-sell" onclick="trade('${good.name}', -1)">卖</button>
-                    <button class="btn-max" onclick="trade('${good.name}', -999)">全卖</button>
-                    <button class="btn-buy" onclick="trade('${good.name}', 1)" ${marketItem.stock<=0?'disabled':''}>买</button>
-                    <button class="btn-max" onclick="trade('${good.name}', 999)" ${marketItem.stock<=0?'disabled':''}>全买</button>
-                </div>
-            </div>`;
-        }
-    });
-    document.getElementById("marketList").innerHTML = listHtml;
-
-    renderCityList();
-    renderUpgradePanel();
-}
-
-function renderCityList() {
-    let cityHtml = "";
-    CITIES.forEach((city, idx) => {
-        if (idx === player.cityIdx) return;
-        
-        // 5.0功能：大超市之后无法回新手村
-        if (player.rankIdx >= 5 && idx <= 1) return;
-
-        let distDiff = Math.abs(city.dist - CITIES[player.cityIdx].dist);
-        let cost = calculateTravelCost(distDiff);
-        let isLocked = city.reqRank > player.rankIdx;
-        let lockMsg = isLocked ? `🔒` : `¥${cost}`;
-        
-        // 搬家按钮
-        let moveBtn = "";
-        if (!isLocked && idx !== player.homeIdx) {
-            let moveCost = Math.min(3000000, cost * 100); // 搬家费
-            moveBtn = `<button style="background:#58a6ff; color:black; font-size:10px; margin-left:5px;" onclick="moveHome(${idx}, ${moveCost})">移民(¥${(moveCost/10000).toFixed(1)}万)</button>`;
-        }
-
-        cityHtml += `
-        <div class="city-btn" style="background:#21262d; border:1px solid #30363d;">
-            <div style="flex:1">
-                <div>${city.name} ${city.isForeign ? '🌎' : ''}</div>
-                <div style="font-size:11px; color:#666">${distDiff}km ${moveBtn}</div>
+        h += `<div class="item-row">
+            <div style="width:35%"><b>${g.name}</b> ${stockHtml}${profitInfo}</div>
+            <div style="width:25%;text-align:center" class="${pClass}">¥${mk.price}</div>
+            <div style="width:40%;text-align:right">
+                <button class="btn-sell" onclick="trade('${g.name}',-1)">卖</button>
+                <button class="btn-max" onclick="trade('${g.name}',-999)">全</button>
+                <button class="btn-buy" onclick="trade('${g.name}',1)" ${mk.stock<=0?'disabled':''}>买</button>
+                <button class="btn-max" onclick="trade('${g.name}',999)" ${mk.stock<=0?'disabled':''}>全</button>
             </div>
-            <button onclick="travel(${idx})" ${isLocked ? 'disabled' : ''}>${lockMsg} 出发</button>
         </div>`;
     });
-    document.getElementById("cityList").innerHTML = cityHtml;
-}
+    document.getElementById("marketList").innerHTML = h;
 
-// === 功能逻辑 ===
-
-function trade(name, amount) {
-    let marketItem = player.marketData[name];
-    if (!marketItem) return;
-    
-    // 初始化
-    if (!player.inventory[name]) player.inventory[name] = { count: 0, cost: 0 };
-    let item = player.inventory[name];
-
-    // 批量计算
-    if (amount === 999) { // 全买
-        let maxCanAfford = Math.floor(player.money / marketItem.price);
-        let maxSpace = player.capacity - getInventoryCount();
-        let maxStock = marketItem.stock;
-        amount = Math.min(maxCanAfford, maxSpace, maxStock);
-        if (amount <= 0) { log("❌ 买不了 (没钱/没空/没货)"); return; }
-    }
-    if (amount === -999) { // 全卖
-        amount = -item.count;
-        if (amount === 0) return;
-    }
-
-    if (amount > 0) { // 买入
-        if (marketItem.stock < amount) { log("❌ 库存不足"); return; }
-        if (getInventoryCount() + amount > player.capacity) { log("❌ 仓库已满"); return; }
-        let cost = amount * marketItem.price;
-        if (player.money < cost) { log("❌ 资金不足"); return; }
-        
-        // 均价计算
-        let totalVal = (item.count * item.cost) + cost;
-        item.count += amount;
-        item.cost = totalVal / item.count;
-        player.money -= cost;
-        player.marketData[name].stock -= amount;
-        log(`🛒 买入 ${amount}个 ${name}`);
-
-    } else { // 卖出
-        amount = Math.abs(amount); // 转正数
-        if (item.count < amount) return;
-        
-        let profit = (marketItem.price - item.cost) * amount;
-        player.money += marketItem.price * amount;
-        item.count -= amount;
-        if (item.count === 0) delete player.inventory[name];
-        
-        let sign = profit >= 0 ? "+" : "";
-        log(`💰 卖出 ${amount}个 ${name} (赚${sign}${parseInt(profit)})`);
-    }
-    render();
-    saveGame();
-}
-
-function travel(targetIdx) {
-    let targetCity = CITIES[targetIdx];
-    let distDiff = Math.abs(targetCity.dist - CITIES[player.cityIdx].dist);
-    let cost = calculateTravelCost(distDiff);
-    
-    if (player.money < cost) { log("❌ 路费不够"); return; }
-    
-    // 签证检查：如果是去国外，且不是回家
-    let visaDays = 0;
-    if (targetCity.isForeign && targetIdx !== player.homeIdx) {
-        // 钱越多待越久：1万 = 1天，最多8天
-        visaDays = Math.min(8, Math.floor(player.money / 10000));
-        if (visaDays < 1) {
-            alert("🛂 签证官：你的资产证明不足（低于1万），拒签！");
-            return;
-        }
-        if(!confirm(`去往 ${targetCity.name}\n路费: ¥${cost}\n你的资产可获得签证: ${visaDays}天\n确定出发吗？`)) return;
-    } else {
-        if(!confirm(`去往 ${targetCity.name}\n路费: ¥${cost}\n确定出发吗？`)) return;
-    }
-
-    // 执行移动
-    if(!processDailyLogic()) return; // 移动也算过一天
-
-    player.money -= cost;
-    player.cityIdx = targetIdx;
-    
-    // 设置签证
-    if (visaDays > 0) {
-        player.visa = { active: true, daysLeft: visaDays };
-        log(`🛂 获得 ${targetCity.name} 签证 ${visaDays} 天`);
-    } else {
-        player.visa = { active: false, daysLeft: 0 };
-    }
-
-    updateMarket(); // 移动刷新市场
-    log(`✈️ 到达 ${targetCity.name}`);
-    render();
-    saveGame();
-}
-
-function moveHome(targetIdx, cost) {
-    if (player.money < cost) { alert("资金不足，无法移民/搬家！"); return; }
-    if (confirm(`确定要花费 ¥${cost.toLocaleString()} 将基地搬迁到 ${CITIES[targetIdx].name} 吗？\n搬迁后该地视为老家，不再受签证限制。`)) {
-        player.money -= cost;
-        player.homeIdx = targetIdx;
-        player.cityIdx = targetIdx; // 顺便移过去
-        player.visa = { active: false, daysLeft: 0 }; // 清除签证限制
-        alert("🎉 乔迁之喜！新基地已设立。");
-        processDailyLogic();
-        updateMarket();
-        render();
-        saveGame();
-    }
-}
-
-function upgradeCapacity() {
-    let cost = player.capacity * 100; // 线性增长
-    if (player.money >= cost) {
-        player.money -= cost;
-        player.capacity += 10;
-        log(`🎒 仓库扩容成功！当前 ${player.capacity}`);
-        render();
-        saveGame();
-    } else {
-        alert(`扩容需要 ¥${cost}`);
-    }
-}
-
-// 辅助函数
-function calculateTravelCost(km) { return km <= 50 ? 20 : Math.floor(km * 1.5 + 100); }
-function goHome(force = false) { 
-    if(player.cityIdx === player.homeIdx) return;
-    
-    let target = player.homeIdx;
-    // 如果还没搬家，且等级高了回不去村口，就去最近的城市
-    if (player.rankIdx >= 5 && player.homeIdx <= 1) target = 2; // 默认回省会
-
-    let distDiff = Math.abs(CITIES[target].dist - CITIES[player.cityIdx].dist);
-    let cost = calculateTravelCost(distDiff);
-    
-    if (force) {
-        // 强制遣返，没钱也得扣成负数
-        player.money -= cost;
-        player.cityIdx = target;
-        player.visa = { active: false, daysLeft: 0 };
-        log("⚠️ 被强制送回国内。");
-        render(); saveGame();
-        return;
-    }
-    travel(target); 
-}
-function getInventoryCount() { let t=0; for(let k in player.inventory) t+=player.inventory[k].count; return t; }
-function upgradeTitle() {
-    let nextIdx = player.rankIdx + 1;
-    if (player.money >= RANKS[nextIdx].cost) {
-        player.money -= RANKS[nextIdx].cost;
-        player.rankIdx = nextIdx;
-        log(`🎉 晋升为【${RANKS[nextIdx].name}】`); // 不再加容量
-        render(); saveGame();
-    }
-}
-function renderUpgradePanel() {
-    let nextIdx = player.rankIdx + 1;
-    if (nextIdx < RANKS.length) {
-        let nextRank = RANKS[nextIdx];
-        document.getElementById("upgradeInfo").innerText = `下级: ${nextRank.name}`;
-        document.getElementById("btnUpgrade").innerText = `晋升 (¥${nextRank.cost.toLocaleString()})`;
-        document.getElementById("btnUpgrade").disabled = player.money < nextRank.cost;
-        document.getElementById("upgradePanel").style.display = "block";
-    } else {
-        document.getElementById("upgradePanel").style.display = "none";
-    }
-}
-
-// 弹窗逻辑
-function showModal(title, content) {
-    document.getElementById("modalTitle").innerText = title;
-    document.getElementById("modalContent").innerHTML = content;
-    document.getElementById("modalOverlay").style.display = "flex";
-    // 点击背景关闭
-    document.getElementById("modalOverlay").onclick = function(e){
-        if(e.target === this) this.style.display = "none";
-    }
-}
-
-function log(msg) {
-    let box = document.getElementById("gameLog");
-    box.innerHTML = `<div>${msg}</div>` + box.innerHTML;
-}
-function fixInventoryData() {
-    for (let key in player.inventory) {
-        if (typeof player.inventory[key] === 'number') {
-            let good = GOODS.find(g => g.name === key);
-            player.inventory[key] = { count: player.inventory[key], cost: good?good.base:0 };
-        }
-    }
-}
-function saveGame() { localStorage.setItem("tycoon_v5", JSON.stringify(player)); }
-function loadGame() {
-    let data = localStorage.getItem("tycoon_v5");
-    if (!data) data = localStorage.getItem("tycoon_v4"); 
-    if (data) player = JSON.parse(data);
-}
-function resetGame() {
-    if(confirm("确定删档重来？")) {
-        localStorage.removeItem("tycoon_v5");
-        location.reload();
-    }
+    let ch = "";
+    CITIES.forEach((c, i) => {
+        if (i == player.cityIdx) return;
+        if (player.rankIdx >= 5 && i <= 1) return;
+        let dist = Math.abs(c.dist - curCity.dist);
+        let cost = dist <= 50 ? 20 : Math.floor(dist * 1.5 + 100);
+        let lock = c.reqRank > player.rankIdx;
+        let moveBtn = (!lock && i !== player.homeIdx) ? `<button style="background:#58a6ff;color:#000;font-size:10px;margin-left:5px" onclick="moveHome(${i},${Math.min(3000000, cost * 100)})">移民</button>` : "";
+        ch += `<div class="city-btn" style="background:#21262d;border:1px solid #30363d;">
+            <div style="flex:1"><div>${c.name} ${c.isForeign?'🌎':''}</div><div style="font-size:11px;color:#666">${dist}km ${moveBtn}</div></div>
+            <button onclick="travel(${i})" ${lock?'disabled':''}>${lock?'🔒':`¥${cost}`} 出发</button>
+        </div>`;
+    });
+    document.getElementById("cityList").innerHTML = ch;
+    renderUp();
 }
 </script>
 </body>
 </html>
+
