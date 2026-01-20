@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>商业大亨 V1.0：正式版</title>
+    <title>商业大亨 V1.1：绝对防御版</title>
     <style>
         :root { --bg: #0f1115; --panel: #161b22; --border: #30363d; --primary: #58a6ff; --green: #2ea043; --red: #da3633; --gold: #e3b341; --text: #c9d1d9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -30,6 +30,7 @@
         .btn-sm { padding: 4px 8px; font-size: 12px; }
         .btn-block { width: 100%; padding: 12px; margin-bottom: 5px; }
 
+        /* 弹窗组件 */
         .modal-mask { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; align-items: center; justify-content: center; }
         .modal-body { background: #1c2128; width: 92%; max-width: 400px; max-height: 85vh; overflow-y: auto; border-radius: 12px; border: 1px solid #444; padding: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .modal-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px; color: var(--primary); display: flex; justify-content: space-between; }
@@ -46,9 +47,25 @@
         .tag-lock { background: #3a0000; color: #ff5252; border: 1px solid #ff5252; }
         .help-list { margin:0; padding-left:20px; font-size:13px; color:#ccc; }
         .help-list li { margin-bottom:5px; }
+        
+        /* 紧急修复按钮 */
+        .panic-btn { position: fixed; top: 5px; right: 5px; z-index: 10000; background: #f00; color: #fff; font-size: 10px; padding: 5px; opacity: 0.8; border: none; }
     </style>
 </head>
 <body>
+
+<script>
+window.onerror = function(msg, url, line) {
+    let confirmReset = confirm(`⚠️ 游戏发生严重错误！\n\n错误信息: ${msg}\n\n是否立即重置存档以修复游戏？\n(点“确定”修复，点“取消”查看日志)`);
+    if(confirmReset) {
+        localStorage.removeItem("tycoon_v1_1");
+        location.reload();
+    }
+    return false;
+};
+</script>
+
+<button class="panic-btn" onclick="hardReset()">🆘 救命修复</button>
 
 <div id="gameModal" class="modal-mask">
     <div class="modal-body">
@@ -115,7 +132,7 @@
 </div>
 
 <script>
-// === 1. 核心配置 (V1.0 正式版) ===
+// === 1. 核心配置 ===
 const CONFIG = {
     RANKS: [
         { n: "流动摊贩", cost: 0, limit: 100 }, { n: "小卖部", cost: 3000, limit: 3000 },
@@ -154,7 +171,7 @@ const CONFIG = {
     ]
 };
 
-// === 玩家数据结构 ===
+// === 玩家数据 ===
 let p = {
     name: "ATRI", money: 1000, hp: 50, day: 1,
     city: 0, home: 0, rank: 0, cap: 50,
@@ -165,27 +182,38 @@ let p = {
     black: { warn: false, mkt: {} }, visa: { day: 0, on: false }
 };
 
-// === 启动系统 ===
+// === 启动游戏 (带强力修复) ===
 window.onload = function() {
     try {
-        let saved = localStorage.getItem("tycoon_1_0_final"); // 1.0 正式版新存档位
+        // 使用新存档名，彻底隔绝旧版本错误
+        let saved = localStorage.getItem("tycoon_v1_1"); 
         if (saved) {
             let data = JSON.parse(saved);
             p = { ...p, ...data };
             
-            // 核心修复：数据越界自动纠错
-            if (!CONFIG.CITIES[p.city]) { logErr("位置数据修复"); p.city = 0; }
-            if (!CONFIG.RANKS[p.rank]) { logErr("头衔数据修复"); p.rank = 0; }
+            // --- 核心修复区：如果这里的数据不对，立即重置，防止渲染崩溃 ---
+            // 修复城市
+            if (!Number.isInteger(p.city) || p.city < 0 || p.city >= CONFIG.CITIES.length) {
+                logErr("检测到位置数据损坏，已自动修复");
+                p.city = 0; 
+            }
+            // 修复头衔
+            if (!Number.isInteger(p.rank) || p.rank < 0 || p.rank >= CONFIG.RANKS.length) {
+                p.rank = 0;
+            }
+            // 修复股票
             if (!p.stock.mkt || p.stock.mkt.length !== CONFIG.STOCKS.length) initStocks();
+            
         } else {
             initStocks();
             refreshMarket(true);
-            showModal("👋 商业大亨 V1.0", `<p>欢迎来到正式版！</p><input id="sn" class="modal-input" placeholder="输入公司名">`, `<button class="btn-success btn-block" onclick="startNewGame()">开始创业</button>`);
+            showModal("👋 商业大亨 V1.1", `<p>欢迎！请开始你的传奇。</p><input id="sn" class="modal-input" placeholder="输入公司名">`, `<button class="btn-success btn-block" onclick="startNewGame()">创建公司</button>`);
         }
-        render(); // 尝试渲染
+        render();
     } catch (e) {
         logErr("致命错误: " + e.message);
-        hardReset(); // 无法挽回时重置
+        // 如果这里都报错了，说明存档已无可救药，自动重置
+        hardReset(); 
     }
 };
 
@@ -198,6 +226,93 @@ function startNewGame() {
     closeModal();
     refreshMarket(true);
     render(); saveGame();
+}
+
+// === 核心渲染 (不死模式) ===
+function render() {
+    try {
+        // 获取当前城市和等级，如果获取失败，使用默认值(0)，绝不报错 undefined
+        let city = CONFIG.CITIES[p.city] || CONFIG.CITIES[0];
+        let rank = CONFIG.RANKS[p.rank] || CONFIG.RANKS[0];
+
+        // 1. 渲染头部
+        setText("uiCompany", p.name);
+        setText("uiMoney", "¥" + p.money.toLocaleString());
+        let mEl = document.getElementById('uiMoney');
+        if(mEl) mEl.style.color = p.money < 0 ? '#ff5252' : '#e3b341';
+        
+        setText("uiHp", p.hp + "/50");
+        let hpBar = document.getElementById("uiHpBar");
+        if(hpBar) hpBar.style.width = (p.hp/50*100) + "%";
+        
+        setText("uiLoc", city.n);
+        setText("uiRank", rank.n);
+        setText("uiMeal", p.mealCount + "/3");
+        
+        let count = 0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k)) count += p.inv[k].c;
+        setText("uiCap", "🎒 " + count + "/" + p.cap);
+
+        // 2. 晋升按钮
+        let next = CONFIG.RANKS[p.rank + 1];
+        let btnCont = document.getElementById('btnPromoteContainer');
+        if(next && btnCont) {
+            btnCont.style.display = 'block';
+            let btn = document.getElementById('btnPromote');
+            btn.innerText = `晋升: ${next.n} (¥${next.cost.toLocaleString()})`;
+            btn.disabled = p.money < next.cost;
+            setText("uiLimit", p.city!==p.home ? `限额: ${parseInt(p.sales)}/${rank.limit}` : "");
+        } else if (btnCont) { 
+            btnCont.style.display = 'none'; 
+        }
+
+        // 3. 市场列表
+        let mh = "";
+        CONFIG.GOODS.forEach(g => {
+            if(p.rank + 1 >= g.r) {
+                let mk = p.market[g.n] || {p:0,s:0};
+                let inv = p.inv[g.n] || {c:0};
+                let col = inv.c > 0 ? (mk.p > inv.cost ? "text-up" : "text-down") : "";
+                mh += `<div class="list-item">
+                    <div><b>${g.n}</b> <small>余${mk.s}</small><br><small style="color:#666">持:${inv.c}</small></div>
+                    <div style="color:${col?'var(--green)':'#fff'}">¥${mk.p}</div>
+                    <div>
+                        <button class="btn-sm btn-danger" onclick="trade('${g.n}', -999)">卖</button>
+                        <button class="btn-sm" onclick="trade('${g.n}', 'custom')">自</button>
+                        <button class="btn-sm btn-success" onclick="trade('${g.n}', 1)">买</button>
+                    </div>
+                </div>`;
+            }
+        });
+        document.getElementById("marketList").innerHTML = mh;
+
+        // 4. 城市列表 (这里是之前报错的重灾区)
+        let ch = "";
+        CONFIG.CITIES.forEach((c, i) => {
+            if (i !== p.city) {
+                let dist = Math.abs(c.dist - city.dist);
+                let lock = c.req > p.rank;
+                let lockTxt = CONFIG.RANKS[c.req] ? CONFIG.RANKS[c.req].n : "未知等级"; // 防止 Rank undefined
+                let btn = lock ? `<span class="tag tag-lock">🔒 需${lockTxt}</span>` : `<button class="btn-sm" onclick="travel(${i})">出发</button>`;
+                ch += `<div class="list-item"><div>${c.n} <small>${dist}km</small></div><div>${btn}</div></div>`;
+            }
+        });
+        document.getElementById("cityList").innerHTML = ch;
+        
+        let casino = document.getElementById("casinoEntry");
+        if(casino) casino.style.display = city.casino ? 'block' : 'none';
+
+    } catch (e) {
+        logErr("渲染错误: " + e.message);
+        console.error(e);
+        // 如果渲染失败，显示急救按钮
+        document.querySelector('.panic-btn').style.display = 'block';
+    }
+}
+
+// 辅助：安全设置文本
+function setText(id, txt) {
+    let el = document.getElementById(id);
+    if(el) el.innerText = txt;
 }
 
 // === 核心逻辑 ===
@@ -275,7 +390,7 @@ function nextDay() {
     return true;
 }
 
-// === UI 交互 ===
+// === 吃饭 ===
 function openRestUI() {
     let nextTxt = p.hasEaten ? "📅 下一天 (已吃)" : "📅 下一天 (未吃 -10HP)";
     let nextCls = p.hasEaten ? "btn-success" : "btn-danger";
@@ -407,74 +522,6 @@ function lotto(c, m) {
     render(); saveGame();
 }
 
-// === 渲染核心 (V1.0 稳定版) ===
-function render() {
-    try {
-        let city = CONFIG.CITIES[p.city] || CONFIG.CITIES[0];
-        let rank = CONFIG.RANKS[p.rank] || CONFIG.RANKS[0];
-
-        document.getElementById("uiCompany").innerText = p.name;
-        document.getElementById("uiMoney").innerText = "¥" + p.money.toLocaleString();
-        document.getElementById('uiMoney').style.color = p.money < 0 ? '#ff5252' : '#e3b341';
-        document.getElementById("uiHp").innerText = p.hp + "/50";
-        document.getElementById("uiHpBar").style.width = (p.hp/50*100) + "%";
-        document.getElementById("uiLoc").innerText = city.n;
-        document.getElementById("uiRank").innerText = rank.n;
-        document.getElementById("uiMeal").innerText = p.mealCount + "/3";
-        
-        let count = 0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k)) count += p.inv[k].c;
-        document.getElementById("uiCap").innerText = "🎒 " + count + "/" + p.cap;
-
-        // 晋升
-        let next = CONFIG.RANKS[p.rank + 1];
-        let btnP = document.getElementById('btnPromote');
-        if(next) {
-            document.getElementById('btnPromoteContainer').style.display = 'block';
-            btnP.innerText = `晋升: ${next.n} (¥${next.cost.toLocaleString()})`;
-            btnP.disabled = p.money < next.cost;
-            document.getElementById('uiLimit').innerText = p.city!==p.home ? `限额: ${parseInt(p.sales)}/${rank.limit}` : "";
-        } else { 
-            document.getElementById('btnPromoteContainer').style.display = 'none'; 
-        }
-
-        // 市场列表
-        let mh = "";
-        CONFIG.GOODS.forEach(g => {
-            if(p.rank + 1 >= g.r) {
-                let mk = p.market[g.n] || {p:0,s:0};
-                let inv = p.inv[g.n] || {c:0};
-                let col = inv.c > 0 ? (mk.p > inv.cost ? "text-up" : "text-down") : "";
-                mh += `<div class="list-item">
-                    <div><b>${g.n}</b> <small>余${mk.s}</small><br><small style="color:#666">持:${inv.c}</small></div>
-                    <div style="color:${col?'var(--green)':'#fff'}">¥${mk.p}</div>
-                    <div>
-                        <button class="btn-sm btn-danger" onclick="trade('${g.n}', -999)">卖</button>
-                        <button class="btn-sm" onclick="trade('${g.n}', 'custom')">自</button>
-                        <button class="btn-sm btn-success" onclick="trade('${g.n}', 1)">买</button>
-                    </div>
-                </div>`;
-            }
-        });
-        document.getElementById("marketList").innerHTML = mh;
-
-        // 城市列表 (显示解锁条件)
-        let ch = "";
-        CONFIG.CITIES.forEach((c, i) => {
-            if (i !== p.city) {
-                let dist = Math.abs(c.dist - city.dist);
-                let lock = c.req > p.rank;
-                let btn = lock ? `<span class="tag tag-lock">🔒 需${CONFIG.RANKS[c.req].n}</span>` : `<button class="btn-sm" onclick="travel(${i})">出发</button>`;
-                ch += `<div class="list-item"><div>${c.n} <small>${dist}km</small></div><div>${btn}</div></div>`;
-            }
-        });
-        document.getElementById("cityList").innerHTML = ch;
-        document.getElementById("casinoEntry").style.display = city.casino ? 'block' : 'none';
-
-    } catch (e) {
-        logErr("渲染错误: " + e.message);
-    }
-}
-
 // === 交易 ===
 function trade(n, amt) {
     let mk = p.market[n];
@@ -560,9 +607,9 @@ function showModal(t, c, f) { document.getElementById('mTitle').innerText=t; doc
 function closeModal() { document.getElementById('gameModal').style.display='none'; }
 function showToast(m) { document.getElementById('gameLog').innerHTML=`<div>> ${m}</div>`+document.getElementById('gameLog').innerHTML; }
 function logErr(m) { document.getElementById('gameLog').innerHTML=`<div class='err-msg'>❌ ${m}</div>`+document.getElementById('gameLog').innerHTML; }
-function saveGame() { localStorage.setItem("tycoon_1_0_final", JSON.stringify(p)); showToast("已存档"); }
-function loadGame() { return localStorage.getItem("tycoon_1_0_final"); }
-function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_1_0_final"); location.reload(); } }
+function saveGame() { localStorage.setItem("tycoon_v1_1", JSON.stringify(p)); showToast("已存档"); }
+function loadGame() { return localStorage.getItem("tycoon_v1_1"); }
+function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v1_1"); location.reload(); } }
 function getInvCount() { let c=0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k)) c+=p.inv[k].c; return c; }
 function expandCap() { let c=p.cap*100; if(p.money>=c){p.money-=c;p.cap+=10;render();saveGame();} }
 function goHome(f) { travel(p.home, 0, f); }
