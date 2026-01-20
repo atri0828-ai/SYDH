@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>商业大亨 V1.3：五档膳食版</title>
+    <title>商业大亨 V1.6：宏观调控版</title>
     <style>
         :root { --bg: #0f1115; --panel: #161b22; --border: #30363d; --primary: #58a6ff; --green: #2ea043; --red: #da3633; --gold: #e3b341; --text: #c9d1d9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -45,9 +45,35 @@
         .text-up { color: var(--green); } .text-down { color: var(--red); }
         .tag { font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 4px; background: #333; color: #aaa; }
         .tag-lock { background: #3a0000; color: #ff5252; border: 1px solid #ff5252; }
+        .help-list { margin:0; padding-left:20px; font-size:13px; color:#ccc; }
+        .help-list li { margin-bottom:5px; }
+        .log-item { margin-bottom: 10px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .log-ver { color: var(--gold); font-weight: bold; font-size: 14px; }
+        .log-content { color: #ccc; font-size: 13px; white-space: pre-wrap; }
+        .market-trend { font-size: 12px; padding: 4px 8px; border-radius: 4px; background: #222; text-align: center; margin-top: 5px; border: 1px solid #444; }
+        .trend-up { color: #ff5252; border-color: #ff5252; }
+        .trend-down { color: #00e676; border-color: #00e676; }
+        .trend-crash { color: #fff; background: #da3633; border-color: #fff; font-weight: bold; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .mission-box { background: linear-gradient(90deg, #16222A, #3A6073); padding: 12px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #58a6ff; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .mission-info { flex: 1; }
+        .mission-tag { font-size: 10px; background: var(--primary); color: #000; padding: 2px 4px; border-radius: 4px; font-weight: bold; margin-right: 5px; }
+        .mission-title { font-weight: bold; color: #fff; font-size: 14px; margin-bottom: 2px; }
+        .mission-desc { font-size: 12px; color: #bde0ff; }
+        .mission-btn { background: var(--gold); color: #000; border: none; font-size: 12px; padding: 6px 12px; border-radius: 20px; animation: bounce 2s infinite; font-weight: bold; }
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-5px);} 60% {transform: translateY(-3px);} }
     </style>
 </head>
 <body>
+
+<script>
+window.onerror = function(msg, url, line) {
+    let logBox = document.getElementById('gameLog');
+    if(logBox) logBox.innerHTML = `<div class='err-msg'>⚠️ 错误(已忽略): ${msg}</div>` + logBox.innerHTML;
+    return true; 
+};
+</script>
 
 <div id="gameModal" class="modal-mask">
     <div class="modal-body">
@@ -65,15 +91,26 @@
         <div class="stat-item">位置 <div id="uiLoc">--</div></div>
         <div class="stat-item">已吃 <div id="uiMeal" style="color:var(--primary)">0/3</div></div>
     </div>
+    
     <div style="display:flex; justify-content:space-between; margin-top:10px; font-size:12px; color:#666;">
         <span id="uiRank">--</span>
         <span id="uiCap">🎒 0/0</span>
         <span id="uiLimit" style="color:var(--red)"></span>
     </div>
-    <div id="buffBar" style="font-size:11px; color:var(--gold); text-align:center; margin-top:5px; height:15px;"></div>
+    
+    <div id="uiTrend" class="market-trend">📊 市场行情分析中...</div>
+
     <div id="btnPromoteContainer" style="margin-top:10px; display:none;">
         <button id="btnPromote" class="btn-block btn-gold" onclick="promote()">晋升头衔</button>
     </div>
+</div>
+
+<div id="missionBox" class="mission-box" style="display:none;">
+    <div class="mission-info">
+        <div class="mission-title" id="msTitle">🎯 目标</div>
+        <div class="mission-desc" id="msDesc">加载中...</div>
+    </div>
+    <button id="msBtn" class="mission-btn" onclick="claimMission()">领取</button>
 </div>
 
 <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:5px; margin-bottom:10px;">
@@ -99,30 +136,50 @@
 </div>
 
 <div class="panel">
-    <b>✈️ 移动</b>
+    <b>✈️ 移动 (含运费)</b>
     <div id="cityList"></div>
 </div>
 
 <div class="panel">
-    <button class="btn-block btn-info" onclick="openHelpUI()">📖 游戏说明书 (新人必读)</button>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+        <button class="btn-info" onclick="openHelpUI()">📖 玩法说明</button>
+        <button class="btn-info" style="border-color:#aaa; color:#fff; background:#444;" onclick="openLogUI()">📜 更新日志</button>
+    </div>
     <div style="display:flex; gap:5px; margin-bottom:10px;">
         <button class="btn-sm" style="flex:1" onclick="saveGame()">保存</button>
         <button class="btn-sm" style="flex:1" onclick="exportSave()">导出</button>
         <button class="btn-sm" style="flex:1" onclick="importSave()">导入</button>
     </div>
-    <button class="btn-sm btn-danger" style="width:100%" onclick="hardReset()">☠️ 删档重来 (修复一切)</button>
+    <button class="btn-sm btn-danger" style="width:100%" onclick="hardReset()">☠️ 删档重来</button>
     <div class="log-box" id="gameLog"></div>
 </div>
 
 <script>
+// === 0. 日志与任务配置 ===
+const CHANGELOG = [
+    { ver: "V1.6", content: "- 平衡性调整：任务奖励大幅削减(10%->3%)\n- 新增：所得税系统，横财超过5000将被重税\n- 难度：后期目标难度提升" },
+    { ver: "V1.5", content: "- 任务系统：无尽挑战目标" },
+    { ver: "V1.4", content: "- 优化：稳定性增强，错误静默" },
+    { ver: "V1.2", content: "- 经济危机模式：仓储费、运费" },
+    { ver: "V1.0", content: "- 正式版发布" }
+];
+
+const TUTORIAL_MISSIONS = [
+    { t: "初入商海", d: "在市场买入任意商品", check: (p)=>getInvCount()>0, reward: 100 },
+    { t: "世界那么大", d: "前往【县城】(或其他城市)", check: (p)=>p.city!==0, reward: 200 },
+    { t: "第一桶金", d: "卖出商品赚取差价", check: (p)=>getInvCount()===0 && p.money>1000, reward: 300 },
+    { t: "身体是本钱", d: "吃一顿【家常菜】或更好", check: (p)=>p.hp>=30, reward: 150 },
+    { t: "金融理财", d: "在银行存款至少 100 元", check: (p)=>p.bank.dep>=100, reward: 200 },
+    { t: "做大做强", d: "扩充一次背包容量", check: (p)=>p.cap>50, reward: 500 }
+];
+
 // === 1. 核心配置 ===
 const CONFIG = {
     RANKS: [
-        { n: "流动摊贩", cost: 0, limit: 100 }, { n: "小卖部", cost: 3000, limit: 3000 },
-        { n: "便利店", cost: 10000, limit: 8000 }, { n: "连锁商店", cost: 30000, limit: 25000 },
-        { n: "小型超市", cost: 80000, limit: 60000 }, { n: "大型超市", cost: 200000, limit: 150000 },
-        { n: "贸易公司", cost: 500000, limit: 500000 }, { n: "跨国集团", cost: 5000000, limit: 5000000 },
-        { n: "商业帝国", cost: 20000000, limit: 20000000 }, { n: "世界首富", cost: 100000000, limit: 1000000000 }
+        { n: "摊贩", cost: 0, limit: 100 }, { n: "小卖部", cost: 3000, limit: 3000 },
+        { n: "便利店", cost: 10000, limit: 8000 }, { n: "超市", cost: 30000, limit: 25000 },
+        { n: "贸易公司", cost: 80000, limit: 60000 }, { n: "跨国集团", cost: 200000, limit: 150000 },
+        { n: "商业帝国", cost: 5000000, limit: 5000000 }, { n: "世界首富", cost: 100000000, limit: 1000000000 }
     ],
     CITIES: [
         { n: "村口", dist: 0, req: 0, foreign: false }, { n: "县城", dist: 20, req: 0, foreign: false },
@@ -163,28 +220,34 @@ let p = {
     stock: { open: false, port: {}, mkt: [] },
     estate: {}, mealCount: 0, hasEaten: false, sales: 0,
     black: { warn: false, mkt: {} }, visa: { day: 0, on: false },
-    // V9.5 Buff系统: 0=无, 1=路费免, 2=背包+20
-    buffCurrent: 0, buffNext: 0 
+    buffCurrent: 0, buffNext: 0, trend: 1.0, trendName: "平稳",
+    missionStep: 0, dynMission: null 
 };
 
-// === 启动系统 ===
 window.onload = function() {
     try {
-        let saved = localStorage.getItem("tycoon_v95");
+        let saved = localStorage.getItem("tycoon_v1_6"); // 新存档
         if (saved) {
             let data = JSON.parse(saved);
             p = { ...p, ...data };
             if (!CONFIG.CITIES[p.city]) p.city = 0;
             if (!CONFIG.RANKS[p.rank]) p.rank = 0;
             if (!p.stock.mkt || p.stock.mkt.length !== CONFIG.STOCKS.length) initStocks();
+            for (let key in p.inv) if (p.inv[key] && isNaN(p.inv[key].c)) delete p.inv[key];
         } else {
             initStocks();
             refreshMarket(true);
-            showModal("👋 商业大亨 V9.5", `<p>欢迎！这是加入了【饮食策略】的版本。</p><input id="sn" class="modal-input" placeholder="输入公司名">`, `<button class="btn-success btn-block" onclick="startNewGame()">开始创业</button>`);
+            showModal("👋 商业大亨 V1.6", `<p>欢迎！这是加入了【宏观调控】的版本。<br>小心税务局！</p><input id="sn" class="modal-input" placeholder="输入公司名">`, `<button class="btn-success btn-block" onclick="startNewGame()">开始</button>`);
         }
+        
+        if (p.missionStep >= TUTORIAL_MISSIONS.length && !p.dynMission) {
+            generateDynamicMission();
+        }
+        
         render();
     } catch (e) {
-        logErr("致命错误: " + e.message);
+        let logBox = document.getElementById('gameLog');
+        if(logBox) logBox.innerHTML = `<div class='err-msg'>⚠️ 初始化警告: ${e.message}</div>`;
         hardReset();
     }
 };
@@ -200,11 +263,118 @@ function startNewGame() {
     render(); saveGame();
 }
 
+// === V1.6 动态任务系统 (平衡版) ===
+function generateDynamicMission() {
+    let types = ['money', 'cap', 'day', 'stock'];
+    let type = types[Math.floor(Math.random() * types.length)];
+    let target = 0;
+    let reward = 0;
+    let title = "";
+    let desc = "";
+
+    let base = Math.max(1000, p.money + p.bank.dep);
+
+    if (type === 'money') {
+        target = Math.floor(base * 1.8); // 难度提升：1.8倍
+        reward = Math.floor(target * 0.05); // 奖励削弱：5%
+        title = "💰 资产增值";
+        desc = `将总资产(现金+存款)提升至 ¥${target.toLocaleString()}`;
+    } else if (type === 'cap') {
+        target = p.cap + 20; 
+        reward = Math.floor(target * 50); // 奖励削弱
+        title = "🎒 物流巨头";
+        desc = `将背包容量扩充至 ${target}`;
+    } else if (type === 'day') {
+        target = p.day + 15; // 难度提升：+15天
+        reward = Math.floor(base * 0.03 + 500); // 奖励削弱
+        title = "⏳ 百年老店";
+        desc = `生存坚持到第 ${target} 天`;
+    } else if (type === 'stock') {
+        target = Math.floor(base * 0.6); 
+        if(target < 5000) target = 5000;
+        reward = Math.floor(target * 0.08); // 奖励削弱：8%
+        title = "📈 股神降临";
+        desc = `股票持仓总市值达到 ¥${target.toLocaleString()}`;
+    }
+
+    p.dynMission = { type: type, target: target, reward: reward, title: title, desc: desc };
+    saveGame();
+}
+
+function checkMission() {
+    if (p.missionStep < TUTORIAL_MISSIONS.length) {
+        let m = TUTORIAL_MISSIONS[p.missionStep];
+        try { return m.check(p); } catch(e) { return false; }
+    }
+    
+    if (p.dynMission) {
+        let m = p.dynMission;
+        if (m.type === 'money') return (p.money + p.bank.dep) >= m.target;
+        if (m.type === 'cap') return p.cap >= m.target;
+        if (m.type === 'day') return p.day >= m.target;
+        if (m.type === 'stock') {
+            let stockVal = 0;
+            for(let k in p.stock.port) stockVal += p.stock.port[k].c * p.stock.mkt.find(s=>s.n===k).p;
+            return stockVal >= m.target;
+        }
+    }
+    return false;
+}
+
+function claimMission() {
+    if (checkMission()) {
+        let reward = 0;
+        let title = "";
+        
+        if (p.missionStep < TUTORIAL_MISSIONS.length) {
+            let m = TUTORIAL_MISSIONS[p.missionStep];
+            reward = m.reward;
+            title = m.t;
+            p.missionStep++;
+            if (p.missionStep >= TUTORIAL_MISSIONS.length) generateDynamicMission();
+        } else {
+            reward = p.dynMission.reward;
+            title = p.dynMission.title;
+            generateDynamicMission(); 
+        }
+        
+        // V1.6 所得税系统
+        let tax = 0;
+        if (reward > 5000) {
+            let taxRate = 0.2;
+            if (reward > 50000) taxRate = 0.3;
+            if (reward > 1000000) taxRate = 0.45;
+            tax = Math.floor(reward * taxRate);
+            reward -= tax;
+        }
+
+        p.money += reward;
+        
+        let msg = `🎉 完成【${title}】\n获得奖金: ¥${(reward+tax).toLocaleString()}`;
+        if(tax > 0) msg += `\n💸 扣除所得税: -¥${tax.toLocaleString()}\n💰 实际到手: ¥${reward.toLocaleString()}`;
+        
+        alert(msg);
+        showToast(`任务奖励 +¥${reward} (税-¥${tax})`);
+        
+        render(); saveGame();
+    } else {
+        alert("目标尚未达成！");
+    }
+}
+
 // === 核心逻辑 ===
 function refreshMarket(init) {
+    let roll = Math.random();
+    if(roll < 0.1) { p.trend = 0.6; p.trendName = "📉 崩盘 (-40%)"; }
+    else if(roll < 0.3) { p.trend = 0.8; p.trendName = "📉 熊市 (-20%)"; }
+    else if(roll < 0.7) { p.trend = 1.0; p.trendName = "📊 平稳"; }
+    else if(roll < 0.9) { p.trend = 1.2; p.trendName = "📈 牛市 (+20%)"; }
+    else { p.trend = 1.5; p.trendName = "🔥 狂热 (+50%)"; }
+
     let nm = {};
     CONFIG.GOODS.forEach(g => {
         let pr = Math.floor(g.b * (1 + (Math.random()-0.5)*2*g.v));
+        pr = Math.floor(pr * p.trend); 
         nm[g.n] = { p: Math.max(1, pr), s: Math.floor(g.s * (0.5+Math.random())) };
     });
     p.market = nm;
@@ -220,142 +390,81 @@ function refreshMarket(init) {
         if(!conf) return;
         let old = s.p;
         let np = Math.floor(old * (1 + (Math.random()-0.5)*2*conf.v));
+        np = Math.floor(np * p.trend);
         s.p = Math.min(conf.max, Math.max(conf.min, np));
         s.chg = ((s.p-old)/old*100).toFixed(2);
     });
 }
 
 function nextDay() {
-    if (p.money < 0) {
-        alert("👮 资不抵债，被捕入狱！\n游戏结束！");
-        hardReset(); return false;
-    }
-
-    if (!p.hasEaten) {
-        p.hp -= 10;
-        showToast("⚠️ 昨天没吃饭 -10HP");
-        if (p.hp <= 0) {
-            let cost = Math.floor(Math.max(0, p.money) * 0.75);
-            p.money -= cost; p.hp = 20;
-            showModal("🏥 饿晕抢救", `<p>扣除75%资产(¥${cost})作为医药费。</p>`);
-            return false;
-        }
-    }
-
-    p.day++;
-    p.mealCount = 0;
-    p.hasEaten = false;
-    
-    // Buff 更新：应用昨天的饮食效果
-    p.buffCurrent = p.buffNext;
-    p.buffNext = 0; // 重置下一天的buff
-    if(p.buffCurrent === 1) showToast("✨ Buff生效: 今日路费全免！");
-    if(p.buffCurrent === 2) showToast("💪 Buff生效: 背包容量临时+20！");
-
-    let rent = 0;
-    for(let k in p.estate) { 
-        let e = CONFIG.ESTATES.find(x=>x.id==k);
-        if(e) rent += e.rent;
-    }
-    if(rent>0) { p.money+=rent; showToast("收租 +"+rent); }
-
-    if (p.bank.dep > 0) p.bank.dep += Math.floor(p.bank.dep * 0.005);
-    if (p.bank.loan > 0) {
-        p.bank.loan += Math.floor(p.bank.loan * 0.02);
-        if (p.day > p.bank.due) {
-            alert("🚓 贷款逾期，资产没收！");
+    try {
+        if (p.money < 0) {
+            alert("👮 资不抵债，被捕入狱！\n游戏结束！");
             hardReset(); return false;
         }
-    }
 
-    if (CONFIG.CITIES[p.city].foreign && p.city !== p.home) {
-        p.visa.day--;
-        if (p.visa.day <= 0) { alert("签证到期，遣返！"); travel(p.home, 0, true); return false; }
-    }
-
-    refreshMarket();
-    if (p.city === p.home) p.sales = 0;
-    
-    showToast("📅 第 " + p.day + " 天");
-    render(); saveGame();
-    return true;
-}
-
-// === V9.5 饮食系统 (5档位) ===
-function openRestUI() {
-    let nextTxt = p.hasEaten ? "📅 下一天 (已吃)" : "📅 下一天 (未吃 -10HP)";
-    let nextCls = p.hasEaten ? "btn-success" : "btn-danger";
-    
-    // 计算动态价格
-    let cost4 = Math.floor(Math.max(0, p.money) * 0.001); // 0.1%
-    if(cost4 < 800) cost4 = 800; if(cost4 > 8000) cost4 = 8000;
-    
-    let cost5 = Math.floor(Math.max(0, p.money) * 0.005); // 0.5%
-    if(cost5 < 3000) cost5 = 3000; if(cost5 > 50000) cost5 = 50000;
-
-    let html = `
-    <div style="max-height:400px;overflow-y:auto;display:grid;gap:8px;">
-        <button class="menu-btn" onclick="doEat(1, 10)">
-            <div>🍜 <b>挂逼面</b> <span class="tag">¥10</span><br><small style="color:#aaa">+2HP | <span style="color:#ff5252">20%几率拉肚子</span></small></div>
-        </button>
-        <button class="menu-btn" onclick="doEat(2, 60)">
-            <div>🍱 <b>路边摊</b> <span class="tag">¥60</span><br><small style="color:#aaa">+6HP | <span style="color:#ff5252">5%几率闹肚子</span></small></div>
-        </button>
-        <button class="menu-btn" onclick="doEat(3, 250)">
-            <div>🍛 <b>家常菜</b> <span class="tag">¥250</span><br><small style="color:#aaa">+15HP | 安全卫生</small></div>
-        </button>
-        <button class="menu-btn" style="border-color:var(--primary)" onclick="doEat(4, ${cost4})">
-            <div>🍷 <b>商务餐</b> <span class="tag" style="color:var(--gold)">¥${cost4}</span><br><small style="color:#aaa">+30HP | <span style="color:var(--primary)">Buff: 明日路费免</span></small></div>
-        </button>
-        <button class="menu-btn" style="border-color:var(--gold)" onclick="doEat(5, ${cost5})">
-            <div>🦞 <b>米其林</b> <span class="tag" style="color:var(--gold)">¥${cost5}</span><br><small style="color:#aaa">HP回满 | <span style="color:var(--green)">Buff: 明日背包+20</span></small></div>
-        </button>
-    </div>
-    <div style="margin-top:10px;text-align:right">
-        <button onclick="doNextDay()" class="${nextCls}">${nextTxt}</button>
-    </div>
-    `;
-    showModal("🛌 餐厅菜单", html);
-}
-
-function doEat(tier, cost) {
-    if (p.mealCount >= 3) { alert("今天吃撑了！"); return; }
-    
-    // 钱不够判定
-    if (p.money < cost) {
-        if(p.money < 10) { // 穷途末路霸王餐
-             if(!confirm("身无分文！强行吃霸王餐扣 ¥1000？")) return;
-             p.money -= 1000;
-             showToast("霸王餐罚款 ¥1000");
-        } else {
-             return alert("钱不够，吃不起这个档次！");
+        if (!p.hasEaten) {
+            p.hp -= 10;
+            showToast("⚠️ 绝食 -10HP");
+            if (p.hp <= 0) {
+                let cost = Math.floor(Math.max(0, p.money) * 0.75);
+                p.money -= cost; p.hp = 20;
+                showModal("🏥 饿晕抢救", `<p>扣除75%资产(¥${cost})作为医药费。</p>`);
+                return false;
+            }
         }
-    } else {
-        p.money -= cost;
-        showToast(`消费 ¥${cost}`);
-    }
 
-    // 效果判定
-    if(tier === 1) { // 挂逼面
-        if(Math.random() < 0.2) { p.hp -= 5; showToast("🤢 拉肚子! HP-5"); }
-        else { p.hp += 2; showToast("勉强饱了 HP+2"); }
-    }
-    else if(tier === 2) { // 路边摊
-        if(Math.random() < 0.05) { p.hp -= 2; showToast("🤢 肚子疼! HP-2"); }
-        else { p.hp += 6; showToast("还行 HP+6"); }
-    }
-    else if(tier === 3) { p.hp += 15; }
-    else if(tier === 4) { p.hp += 30; p.buffNext = 1; showToast("获得Buff: 明日免路费"); }
-    else if(tier === 5) { p.hp = 50; p.buffNext = 2; showToast("获得Buff: 明日背包+20"); }
+        p.day++;
+        p.mealCount = 0;
+        p.hasEaten = false;
+        p.buffCurrent = p.buffNext; p.buffNext = 0;
 
-    if(p.hp > 50) p.hp = 50;
-    p.mealCount++;
-    p.hasEaten = true;
-    
-    closeModal(); openRestUI(); render(); saveGame();
+        let invCount = getInvCount();
+        if (invCount > 0) {
+            let storageFee = invCount * 10;
+            p.money -= storageFee;
+            showToast(`📦 仓储费 -¥${storageFee}`);
+        }
+
+        if (p.money > 100000 && Math.random() < 0.15) {
+            let tax = Math.floor(p.money * 0.1);
+            p.money -= tax;
+            showModal("👮 税务稽查", `<p>补缴税款: ¥${tax.toLocaleString()}</p>`);
+        }
+        
+        let rent = 0;
+        for(let k in p.estate) { 
+            let e = CONFIG.ESTATES.find(x=>x.id==k);
+            if(e) rent += e.rent;
+        }
+        if(rent>0) { p.money+=rent; showToast("收租 +"+rent); }
+
+        if (p.bank.dep > 0) p.bank.dep += Math.floor(p.bank.dep * 0.005);
+        if (p.bank.loan > 0) {
+            p.bank.loan += Math.floor(p.bank.loan * 0.02);
+            if (p.day > p.bank.due) {
+                alert("🚓 贷款逾期，资产没收！");
+                hardReset(); return false;
+            }
+        }
+
+        if (CONFIG.CITIES[p.city].foreign && p.city !== p.home) {
+            p.visa.day--;
+            if (p.visa.day <= 0) { alert("签证到期，遣返！"); travel(p.home, 0, true); return false; }
+        }
+
+        refreshMarket();
+        if (p.city === p.home) p.sales = 0;
+        
+        showToast("📅 第 " + p.day + " 天");
+        render(); saveGame();
+        return true;
+    } catch (e) {
+        let logBox = document.getElementById('gameLog');
+        if(logBox) logBox.innerHTML = `<div class='err-msg'>⚠️ 错误: ${e.message}</div>` + logBox.innerHTML;
+        return false;
+    }
 }
-
-function doNextDay() { closeModal(); nextDay(); }
 
 // === 渲染 ===
 function render() {
@@ -372,20 +481,49 @@ function render() {
         document.getElementById("uiRank").innerText = rank.n;
         document.getElementById("uiMeal").innerText = p.mealCount + "/3";
         
-        // 背包显示 (含Buff)
-        let baseCap = p.cap;
-        let buffCap = p.buffCurrent === 2 ? 20 : 0;
-        let count = getInvCount();
-        let capTxt = buffCap > 0 ? `${baseCap}<span style='color:var(--green)'>+${buffCap}</span>` : baseCap;
-        document.getElementById("uiCap").innerHTML = `🎒 ${count}/${capTxt}`;
-        
-        // Buff状态条
-        let buffMsg = "";
-        if(p.buffCurrent === 1) buffMsg = "👟 健步如飞 (路费免)";
-        if(p.buffCurrent === 2) buffMsg = "💪 精力充沛 (包+20)";
-        document.getElementById("buffBar").innerText = buffMsg;
+        let count = 0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k) && p.inv[k]) count += p.inv[k].c;
+        let capTxt = p.buffCurrent === 2 ? `${p.cap}<span style='color:var(--green)'>+20</span>` : p.cap;
+        document.getElementById("uiCap").innerHTML = "🎒 " + count + "/" + capTxt;
 
-        // 晋升
+        let trendEl = document.getElementById("uiTrend");
+        trendEl.innerText = p.trendName;
+        trendEl.className = "market-trend " + (p.trend > 1 ? "trend-up" : (p.trend < 0.8 ? "trend-crash" : ""));
+
+        let mBox = document.getElementById("missionBox");
+        let currentMission = null;
+        let isTutorial = false;
+
+        if (p.missionStep < TUTORIAL_MISSIONS.length) {
+            currentMission = TUTORIAL_MISSIONS[p.missionStep];
+            isTutorial = true;
+        } else if (p.dynMission) {
+            currentMission = p.dynMission;
+        }
+
+        if (currentMission) {
+            mBox.style.display = "flex";
+            let tag = isTutorial ? "<span class='mission-tag'>新手</span>" : "<span class='mission-tag' style='background:#9c27b0;color:#fff'>挑战</span>";
+            let displayReward = currentMission.reward;
+            
+            // 预估税后奖励显示
+            let tax = 0;
+            if(!isTutorial && displayReward > 5000) {
+                 let r = displayReward; let tr = 0.2; if(r>50000)tr=0.3; if(r>1000000)tr=0.45;
+                 tax = Math.floor(r*tr);
+            }
+            let rewardTxt = tax>0 ? `(+¥${(displayReward-tax).toLocaleString()} 税后)` : `(+¥${displayReward})`;
+
+            document.getElementById("msTitle").innerHTML = `${tag} ${currentMission.t || currentMission.title} <span style='color:gold;font-size:12px'>${rewardTxt}</span>`;
+            document.getElementById("msDesc").innerText = currentMission.d || currentMission.desc;
+            
+            let btn = document.getElementById("msBtn");
+            if (checkMission()) {
+                btn.innerText = "领取奖励"; btn.disabled = false; btn.style.opacity = 1; btn.style.animation = "bounce 1s infinite";
+            } else {
+                btn.innerText = "进行中..."; btn.disabled = true; btn.style.opacity = 0.5; btn.style.animation = "none";
+            }
+        } else { mBox.style.display = "none"; }
+
         let next = CONFIG.RANKS[p.rank + 1];
         let btnP = document.getElementById('btnPromote');
         if(next) {
@@ -397,7 +535,6 @@ function render() {
             document.getElementById('btnPromoteContainer').style.display = 'none'; 
         }
 
-        // 市场
         let mh = "";
         CONFIG.GOODS.forEach(g => {
             if(p.rank + 1 >= g.r) {
@@ -417,7 +554,6 @@ function render() {
         });
         document.getElementById("marketList").innerHTML = mh;
 
-        // 城市 (应用路费Buff)
         let ch = "";
         CONFIG.CITIES.forEach((c, i) => {
             if (i !== p.city) {
@@ -432,7 +568,8 @@ function render() {
         document.getElementById("casinoEntry").style.display = city.casino ? 'block' : 'none';
 
     } catch (e) {
-        logErr("渲染错误: " + e.message);
+        let logBox = document.getElementById('gameLog');
+        if(logBox) logBox.innerHTML = `<div class='err-msg'>⚠️ 渲染问题: ${e.message}</div>`;
     }
 }
 
@@ -441,7 +578,6 @@ function trade(n, amt) {
     let mk = p.market[n];
     if (amt === 'custom') { amt = parseInt(prompt("数量?")); if(!amt) return; }
     
-    // 计算实际容量 (Base + Buff)
     let currentCap = p.cap + (p.buffCurrent === 2 ? 20 : 0);
     
     if (amt === 999) amt = Math.min(Math.floor(p.money/mk.p), currentCap - getInvCount(), mk.s);
@@ -475,14 +611,12 @@ function travel(i, cost, force) {
     if(!cost && !force) {
         let t = CONFIG.CITIES[i];
         let dist = Math.abs(t.dist - CONFIG.CITIES[p.city].dist);
-        cost = dist<=50?20:Math.floor(dist*1.5+100);
+        let baseCost = dist<=50?20:Math.floor(dist*1.5+100);
+        let freight = getInvCount() * 5;
+        cost = baseCost + freight;
+        if(p.buffCurrent === 1) cost = 0;
         
-        // Buff生效：路费变0
-        if(p.buffCurrent === 1) {
-            cost = 0;
-        }
-        
-        if(!confirm(`去 ${t.n} (¥${cost})?`)) return;
+        if(!confirm(`去 ${t.n}\n票价: ¥${baseCost} + 运费: ¥${freight}\n总计: ¥${cost}？`)) return;
     }
     if(p.money < cost && !force) return alert("路费不足");
     
@@ -497,13 +631,46 @@ function travel(i, cost, force) {
     render(); saveGame();
 }
 
-// === 其他系统 (银行/房产等) 保持不变 ===
+function openRestUI() {
+    let nextTxt = p.hasEaten ? "📅 下一天 (已吃)" : "📅 下一天 (未吃 -10HP)";
+    let nextCls = p.hasEaten ? "btn-success" : "btn-danger";
+    let cost4 = Math.floor(Math.max(0, p.money) * 0.001); if(cost4<800)cost4=800; if(cost4>8000)cost4=8000;
+    let cost5 = Math.floor(Math.max(0, p.money) * 0.005); if(cost5<3000)cost5=3000; if(cost5>50000)cost5=50000;
+
+    let html = `
+    <div style="max-height:400px;overflow-y:auto;display:grid;gap:8px;">
+        <button class="menu-btn" onclick="doEat(1, 10)"><div>🍜 <b>挂逼面</b> <span class="tag">¥10</span><br><small style="color:#aaa">+2HP | <span style="color:#ff5252">20%拉肚子</span></small></div></button>
+        <button class="menu-btn" onclick="doEat(2, 60)"><div>🍱 <b>路边摊</b> <span class="tag">¥60</span><br><small style="color:#aaa">+6HP | <span style="color:#ff5252">5%闹肚子</span></small></div></button>
+        <button class="menu-btn" onclick="doEat(3, 250)"><div>🍛 <b>家常菜</b> <span class="tag">¥250</span><br><small style="color:#aaa">+15HP | 安全卫生</small></div></button>
+        <button class="menu-btn" style="border-color:var(--primary)" onclick="doEat(4, ${cost4})"><div>🍷 <b>商务餐</b> <span class="tag" style="color:var(--gold)">¥${cost4}</span><br><small style="color:#aaa">+30HP | <span style="color:var(--primary)">Buff: 免路费</span></small></div></button>
+        <button class="menu-btn" style="border-color:var(--gold)" onclick="doEat(5, ${cost5})"><div>🦞 <b>米其林</b> <span class="tag" style="color:var(--gold)">¥${cost5}</span><br><small style="color:#aaa">HP回满 | <span style="color:var(--green)">Buff: 背包+20</span></small></div></button>
+    </div>
+    <div style="margin-top:10px;text-align:right"><button onclick="doNextDay()" class="${nextCls}">${nextTxt}</button></div>`;
+    showModal("🛌 餐厅", html);
+}
+function doEat(tier, cost) {
+    if (p.mealCount >= 3) { alert("今天吃撑了！"); return; }
+    if (p.money < cost) {
+        if(p.money < 10) {
+             if(!confirm("身无分文！吃霸王餐扣 ¥1000？")) return;
+             p.money -= 1000; showToast("霸王餐罚款 ¥1000");
+        } else return alert("钱不够！");
+    } else { p.money -= cost; showToast(`消费 ¥${cost}`); }
+
+    if(tier === 1) { if(Math.random()<0.2){p.hp-=5;showToast("🤢拉肚子! HP-5");}else{p.hp+=2;} }
+    else if(tier === 2) { if(Math.random()<0.05){p.hp-=2;showToast("🤢闹肚子! HP-2");}else{p.hp+=6;} }
+    else if(tier === 3) { p.hp += 15; }
+    else if(tier === 4) { p.hp += 30; p.buffNext = 1; showToast("Buff: 明日免路费"); }
+    else if(tier === 5) { p.hp = 50; p.buffNext = 2; showToast("Buff: 明日背包+20"); }
+
+    if(p.hp > 50) p.hp = 50; p.mealCount++; p.hasEaten = true;
+    closeModal(); openRestUI(); render(); saveGame();
+}
+function doNextDay() { closeModal(); nextDay(); }
+
 function openBankUI() {
     let dueInfo = p.bank.loan > 0 ? `<br>还款倒计时: <b style="color:${(p.bank.due-p.day)<=3?'red':'#888'}">${p.bank.due - p.day}天</b>` : "";
-    showModal("🏦 瑞士银行", 
-        `现金: ¥${p.money}<br>存款: ¥${p.bank.dep}<br>贷款: ¥${p.bank.loan}${dueInfo}<br><br><input id='bi' class='modal-input' placeholder='金额'>`, 
-        `<button class='btn-success' onclick='bk("d")'>存</button><button class='btn-gold' onclick='bk("w")'>取</button><button class='btn-danger' onclick='bk("l")'>贷</button><button class='btn-primary' onclick='bk("p")'>还</button>`
-    );
+    showModal("🏦 瑞士银行", `现金: ¥${p.money}<br>存款: ¥${p.bank.dep}<br>贷款: ¥${p.bank.loan}${dueInfo}<br><br><input id='bi' class='modal-input' placeholder='金额'>`, `<button class='btn-success' onclick='bk("d")'>存</button><button class='btn-gold' onclick='bk("w")'>取</button><button class='btn-danger' onclick='bk("l")'>贷</button><button class='btn-primary' onclick='bk("p")'>还</button>`);
 }
 function bk(t) {
     let v = parseInt(document.getElementById('bi').value); if(!v || v<=0) return;
@@ -522,6 +689,7 @@ function bk(t) {
     }
     closeModal(); openBankUI(); render(); saveGame();
 }
+
 function openStockUI() {
     if(!p.stock.open) return showModal("📈 开户", "需 ¥1000", `<button class='btn-success' onclick='if(p.money>=1000){p.money-=1000;p.stock.open=true;closeModal();openStockUI();render();}'>支付</button>`);
     let h = "<div style='max-height:350px; overflow:auto;'>";
@@ -539,45 +707,38 @@ function st(n, amt) {
     let h = p.stock.port[n];
     if (amt > 0) {
         if (p.money < amt*s.p) return alert("钱不够");
-        p.money -= amt*s.p; h.cost = (h.c*h.cost + amt*s.p)/(h.c+amt); h.c += amt;
+        p.money -= amt*s.p; h.cost = (h.c * h.cost + amt*s.p)/(h.c + amt); h.c += amt;
     } else {
         if (h.c < Math.abs(amt)) return alert("没货");
         p.money += Math.abs(amt)*s.p; h.c -= Math.abs(amt);
     }
     openStockUI(); render(); saveGame();
 }
-function openLottoUI() {
-    showModal("🎰 彩票", `<div class="lotto-card" onclick="lotto(50, 200000)"><div>发财梦</div><b style='color:gold'>¥50</b></div><div class="lotto-card" onclick="lotto(150, 800000)"><div>暴富流</div><b style='color:gold'>¥150</b></div><div class="lotto-card" onclick="lotto(1000, 5000000)"><div>逆天改命</div><b style='color:gold'>¥1000</b></div><p style='font-size:10px;color:#666;text-align:center;'>中奖率0.005%</p>`);
-}
+
+function openLottoUI() { showModal("🎰 彩票", `<div class="lotto-card" onclick="lotto(50, 200000)"><div>发财梦</div><b style='color:gold'>¥50</b></div><div class="lotto-card" onclick="lotto(150, 800000)"><div>暴富流</div><b style='color:gold'>¥150</b></div><div class="lotto-card" onclick="lotto(1000, 5000000)"><div>逆天改命</div><b style='color:gold'>¥1000</b></div><p style='font-size:10px;color:#666;text-align:center;'>中奖率0.005% | 扣税20%</p>`); }
 function lotto(c, m) {
     if(p.money < c) return alert("钱不够");
     p.money -= c;
-    if(Math.random() < 0.00005) { p.money += m*0.8; alert("🎉 中头奖！到手 ¥" + m*0.8); } 
-    else if(Math.random() < 0.1) { p.money += c*2; showToast("中安慰奖 ¥" + c*2); } 
-    else showToast("没中");
+    if(Math.random() < 0.00005) { p.money += m*0.8; alert("🎉 中头奖！"); } else if(Math.random() < 0.1) { p.money += c*2; showToast("中安慰奖"); } else showToast("没中");
     render(); saveGame();
 }
-function openHouseUI() { 
-    let h=""; CONFIG.ESTATES.forEach(e=>{
-        let btn = p.estate[e.id] ? "已购" : `<button class='btn-gold btn-sm' onclick='buyE(${e.id})'>买</button>`;
-        h+=`<div class='stock-card'>${e.n} ¥${e.cost} 租:${e.rent} <span style='float:right'>${btn}</span></div>`;
-    }); showModal("房产", h); 
-}
+
+function openHouseUI() { let h=""; CONFIG.ESTATES.forEach(e=>{ let btn = p.estate[e.id] ? "已购" : `<button class='btn-gold btn-sm' onclick='buyE(${e.id})'>买</button>`; h+=`<div class='stock-card'>${e.n} ¥${e.cost} 租:${e.rent} <span style='float:right'>${btn}</span></div>`; }); showModal("房产", h); }
 function buyE(id){ let e=CONFIG.ESTATES.find(x=>x.id==id); if(p.money>=e.cost){p.money-=e.cost;p.estate[id]=true;showToast("购房成功");openHouseUI();render();saveGame();}else alert("钱不够"); }
 function openBlackUI() { if(!p.black.warn && !confirm("违禁品风险！继续？")) return; p.black.warn=true; let h=""; CONFIG.BLACK.forEach(g=>{h+=`<div class='list-item'>${g.n} 险${g.risk}% ¥${p.black.mkt[g.n].p} <button class='btn-sm' onclick='tb("${g.n}",1)'>买</button><button class='btn-sm' onclick='tb("${g.n}",-1)'>卖</button></div>`}); showModal("黑市", h); }
 function tb(n,d){ if(Math.random()*100<CONFIG.BLACK.find(x=>x.n==n).risk) return gameOver("被捕"); let mk=p.black.mkt[n]; if(!p.inv[n])p.inv[n]={c:0}; if(d>0){if(p.money>=mk.p){p.money-=mk.p;p.inv[n].c++}}else{if(p.inv[n].c>0){p.money+=mk.p;p.inv[n].c--}} openBlackUI(); render(); saveGame(); }
 function openCasinoUI() { showModal("赌场", `<button class='btn-block' onclick='dice(10000)'>押1万</button><button class='btn-block' onclick='dice(100000)'>押10万</button>`); }
 function dice(b){ if(p.money<b)return alert("钱不够"); if(Math.random()>0.5){p.money+=b;alert("赢了");}else{p.money-=b;alert("输了");} render();saveGame(); }
-function openHelpUI() { showModal("📖 游戏说明书", `<ul class='help-list'><li><b>饮食:</b> 必须吃饭，不吃扣血。低资产强吃扣1000。</li><li><b>Buff:</b> 商务餐免路费，米其林加背包。Buff次日生效。</li><li><b>金融:</b> 贷款30天必还，欠债不能再贷。</li><li><b>黑市:</b> 高风险高回报，被抓删档。</li></ul>`); }
+function openHelpUI() { showModal("📖 说明", `<ul class='help-list'><li><b>任务:</b> 跟随顶部任务栏操作，赚取第一桶金！</li><li><b>经济:</b> 每天扣仓储费，移动扣运费。</li><li><b>风向:</b> 熊市价格暴跌，牛市价格暴涨。</li><li><b>Buff:</b> 吃得好能免运费或加背包。</li></ul>`); }
+function openLogUI() { let h = CHANGELOG.map(c => `<div class='log-item'><div class='log-ver'>${c.ver}</div><div class='log-content'>${c.content}</div></div>`).join(""); showModal("📜 更新日志", h); }
 
-// 基础辅助
 function showModal(t, c, f) { document.getElementById('mTitle').innerText=t; document.getElementById('mContent').innerHTML=c; document.getElementById('mFooter').innerHTML=f||""; document.getElementById('gameModal').style.display='flex'; }
 function closeModal() { document.getElementById('gameModal').style.display='none'; }
 function showToast(m) { document.getElementById('gameLog').innerHTML=`<div>> ${m}</div>`+document.getElementById('gameLog').innerHTML; }
 function logErr(m) { document.getElementById('gameLog').innerHTML=`<div class='err-msg'>❌ ${m}</div>`+document.getElementById('gameLog').innerHTML; }
-function saveGame() { localStorage.setItem("tycoon_v95", JSON.stringify(p)); showToast("已存档"); }
-function loadGame() { return localStorage.getItem("tycoon_v95"); }
-function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v95"); location.reload(); } }
+function saveGame() { localStorage.setItem("tycoon_v1_6", JSON.stringify(p)); showToast("已存档"); }
+function loadGame() { return localStorage.getItem("tycoon_v1_6"); }
+function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v1_6"); location.reload(); } }
 function gameOver(r) { alert("💀 " + r); hardReset(); }
 function getInvCount() { let c=0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k)) c+=p.inv[k].c; return c; }
 function expandCap() { let c=p.cap*100; if(p.money>=c){p.money-=c;p.cap+=10;render();saveGame();} }
