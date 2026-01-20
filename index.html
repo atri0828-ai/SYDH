@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>商业大亨 V1.6：宏观调控版</title>
+    <title>商业大亨 V1.7：物资扩充版</title>
     <style>
         :root { --bg: #0f1115; --panel: #161b22; --border: #30363d; --primary: #58a6ff; --green: #2ea043; --red: #da3633; --gold: #e3b341; --text: #c9d1d9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -157,9 +157,9 @@ window.onerror = function(msg, url, line) {
 <script>
 // === 0. 日志与任务配置 ===
 const CHANGELOG = [
-    { ver: "V1.6", content: "- 平衡性调整：任务奖励大幅削减(10%->3%)\n- 新增：所得税系统，横财超过5000将被重税\n- 难度：后期目标难度提升" },
+    { ver: "V1.7", content: "- 物品扩充：新增辣条、无人机、光刻机等8种商品\n- 修复：扩容按钮无响应问题，增加余额不足提示" },
+    { ver: "V1.6", content: "- 平衡性：削减任务奖励，增加所得税" },
     { ver: "V1.5", content: "- 任务系统：无尽挑战目标" },
-    { ver: "V1.4", content: "- 优化：稳定性增强，错误静默" },
     { ver: "V1.2", content: "- 经济危机模式：仓储费、运费" },
     { ver: "V1.0", content: "- 正式版发布" }
 ];
@@ -173,7 +173,7 @@ const TUTORIAL_MISSIONS = [
     { t: "做大做强", d: "扩充一次背包容量", check: (p)=>p.cap>50, reward: 500 }
 ];
 
-// === 1. 核心配置 ===
+// === 1. 核心配置 (V1.7 物品大扩充) ===
 const CONFIG = {
     RANKS: [
         { n: "摊贩", cost: 0, limit: 100 }, { n: "小卖部", cost: 3000, limit: 3000 },
@@ -189,11 +189,23 @@ const CONFIG = {
         { n: "迪拜", dist: 6000, req: 8, foreign: true }, { n: "拉斯维加斯", dist: 11000, req: 9, foreign: true, casino: true },
         { n: "纽约", dist: 12000, req: 10, foreign: true }
     ],
+    // V1.7 新增8种物品
     GOODS: [
-        { n: "废报纸", b: 1, v: 0.1, r: 0, s: 2000 }, { n: "矿泉水", b: 2, v: 0.1, r: 0, s: 1000 },
-        { n: "火腿肠", b: 5, v: 0.2, r: 0, s: 800 }, { n: "手环", b: 150, v: 0.2, r: 1, s: 200 },
-        { n: "Switch", b: 2000, v: 0.3, r: 2, s: 50 }, { n: "茅台", b: 3000, v: 0.5, r: 3, s: 30 },
-        { n: "劳力士", b: 90000, v: 0.3, r: 5, s: 5 }, { n: "AI芯片", b: 250000, v: 0.7, r: 6, s: 2 }
+        { n: "辣条", b: 0.5, v: 0.1, r: 0, s: 5000 },
+        { n: "废报纸", b: 1, v: 0.1, r: 0, s: 2000 },
+        { n: "矿泉水", b: 2, v: 0.1, r: 0, s: 1000 },
+        { n: "棉袜", b: 5, v: 0.2, r: 0, s: 800 },
+        { n: "充电宝", b: 50, v: 0.15, r: 1, s: 300 },
+        { n: "手环", b: 150, v: 0.2, r: 1, s: 200 },
+        { n: "无人机", b: 2000, v: 0.25, r: 2, s: 50 },
+        { n: "Switch", b: 2200, v: 0.3, r: 2, s: 50 },
+        { n: "显卡", b: 5000, v: 0.4, r: 3, s: 40 },
+        { n: "茅台", b: 3000, v: 0.5, r: 3, s: 30 },
+        { n: "折叠屏手机", b: 12000, v: 0.35, r: 4, s: 20 },
+        { n: "劳力士", b: 90000, v: 0.3, r: 5, s: 5 },
+        { n: "AI芯片", b: 250000, v: 0.7, r: 6, s: 2 },
+        { n: "黄金", b: 450000, v: 0.1, r: 6, s: 5 },
+        { n: "光刻机部件", b: 1000000, v: 0.5, r: 7, s: 1 }
     ],
     STOCKS: [
         { n: "伯克希尔", b: 4000000, min: 2000, max: 8000000, v: 0.02 },
@@ -226,7 +238,7 @@ let p = {
 
 window.onload = function() {
     try {
-        let saved = localStorage.getItem("tycoon_v1_6"); // 新存档
+        let saved = localStorage.getItem("tycoon_v1_7"); // V1.7 新槽位
         if (saved) {
             let data = JSON.parse(saved);
             p = { ...p, ...data };
@@ -234,10 +246,15 @@ window.onload = function() {
             if (!CONFIG.RANKS[p.rank]) p.rank = 0;
             if (!p.stock.mkt || p.stock.mkt.length !== CONFIG.STOCKS.length) initStocks();
             for (let key in p.inv) if (p.inv[key] && isNaN(p.inv[key].c)) delete p.inv[key];
+            
+            // V1.7: 检查市场数据是否缺少新商品，如果缺少则强制刷新
+            if (Object.keys(p.market).length !== CONFIG.GOODS.length) {
+                refreshMarket();
+            }
         } else {
             initStocks();
             refreshMarket(true);
-            showModal("👋 商业大亨 V1.6", `<p>欢迎！这是加入了【宏观调控】的版本。<br>小心税务局！</p><input id="sn" class="modal-input" placeholder="输入公司名">`, `<button class="btn-success btn-block" onclick="startNewGame()">开始</button>`);
+            showModal("👋 商业大亨 V1.7", `<p>欢迎！物品已扩充至16种。</p><input id="sn" class="modal-input" placeholder="输入公司名">`, `<button class="btn-success btn-block" onclick="startNewGame()">开始</button>`);
         }
         
         if (p.missionStep >= TUTORIAL_MISSIONS.length && !p.dynMission) {
@@ -263,7 +280,7 @@ function startNewGame() {
     render(); saveGame();
 }
 
-// === V1.6 动态任务系统 (平衡版) ===
+// === 动态任务系统 ===
 function generateDynamicMission() {
     let types = ['money', 'cap', 'day', 'stock'];
     let type = types[Math.floor(Math.random() * types.length)];
@@ -275,24 +292,24 @@ function generateDynamicMission() {
     let base = Math.max(1000, p.money + p.bank.dep);
 
     if (type === 'money') {
-        target = Math.floor(base * 1.8); // 难度提升：1.8倍
-        reward = Math.floor(target * 0.05); // 奖励削弱：5%
+        target = Math.floor(base * 1.8);
+        reward = Math.floor(target * 0.05); 
         title = "💰 资产增值";
         desc = `将总资产(现金+存款)提升至 ¥${target.toLocaleString()}`;
     } else if (type === 'cap') {
         target = p.cap + 20; 
-        reward = Math.floor(target * 50); // 奖励削弱
+        reward = Math.floor(target * 50); 
         title = "🎒 物流巨头";
         desc = `将背包容量扩充至 ${target}`;
     } else if (type === 'day') {
-        target = p.day + 15; // 难度提升：+15天
-        reward = Math.floor(base * 0.03 + 500); // 奖励削弱
+        target = p.day + 15;
+        reward = Math.floor(base * 0.03 + 500); 
         title = "⏳ 百年老店";
         desc = `生存坚持到第 ${target} 天`;
     } else if (type === 'stock') {
         target = Math.floor(base * 0.6); 
         if(target < 5000) target = 5000;
-        reward = Math.floor(target * 0.08); // 奖励削弱：8%
+        reward = Math.floor(target * 0.08);
         title = "📈 股神降临";
         desc = `股票持仓总市值达到 ¥${target.toLocaleString()}`;
     }
@@ -338,7 +355,6 @@ function claimMission() {
             generateDynamicMission(); 
         }
         
-        // V1.6 所得税系统
         let tax = 0;
         if (reward > 5000) {
             let taxRate = 0.2;
@@ -504,8 +520,6 @@ function render() {
             mBox.style.display = "flex";
             let tag = isTutorial ? "<span class='mission-tag'>新手</span>" : "<span class='mission-tag' style='background:#9c27b0;color:#fff'>挑战</span>";
             let displayReward = currentMission.reward;
-            
-            // 预估税后奖励显示
             let tax = 0;
             if(!isTutorial && displayReward > 5000) {
                  let r = displayReward; let tr = 0.2; if(r>50000)tr=0.3; if(r>1000000)tr=0.45;
@@ -631,6 +645,21 @@ function travel(i, cost, force) {
     render(); saveGame();
 }
 
+// === V1.7 修复扩容函数 ===
+function expandCap() {
+    let cost = p.cap * 100; 
+    if(p.money >= cost) {
+        if(confirm(`扩充背包 10 格需要 ¥${cost}，确定吗？`)) {
+            p.money -= cost;
+            p.cap += 10;
+            showToast(`🎒 背包扩容成功!`);
+            render(); saveGame();
+        }
+    } else {
+        alert(`资金不足！\n扩容需要 ¥${cost}\n(当前: ¥${p.money})`);
+    }
+}
+
 function openRestUI() {
     let nextTxt = p.hasEaten ? "📅 下一天 (已吃)" : "📅 下一天 (未吃 -10HP)";
     let nextCls = p.hasEaten ? "btn-success" : "btn-danger";
@@ -736,12 +765,11 @@ function showModal(t, c, f) { document.getElementById('mTitle').innerText=t; doc
 function closeModal() { document.getElementById('gameModal').style.display='none'; }
 function showToast(m) { document.getElementById('gameLog').innerHTML=`<div>> ${m}</div>`+document.getElementById('gameLog').innerHTML; }
 function logErr(m) { document.getElementById('gameLog').innerHTML=`<div class='err-msg'>❌ ${m}</div>`+document.getElementById('gameLog').innerHTML; }
-function saveGame() { localStorage.setItem("tycoon_v1_6", JSON.stringify(p)); showToast("已存档"); }
-function loadGame() { return localStorage.getItem("tycoon_v1_6"); }
-function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v1_6"); location.reload(); } }
+function saveGame() { localStorage.setItem("tycoon_v1_7", JSON.stringify(p)); showToast("已存档"); }
+function loadGame() { return localStorage.getItem("tycoon_v1_7"); }
+function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v1_7"); location.reload(); } }
 function gameOver(r) { alert("💀 " + r); hardReset(); }
-function getInvCount() { let c=0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k)) c+=p.inv[k].c; return c; }
-function expandCap() { let c=p.cap*100; if(p.money>=c){p.money-=c;p.cap+=10;render();saveGame();} }
+function getInvCount() { let c=0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k) && p.inv[k]) c+=p.inv[k].c; return c; }
 function goHome(f) { travel(p.home, 0, f); }
 function exportSave() { prompt("复制", btoa(encodeURIComponent(JSON.stringify(p)))); }
 function importSave() { try{p=JSON.parse(decodeURIComponent(atob(prompt("粘贴"))));saveGame();location.reload();}catch(e){alert("无效");} }
