@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>商业大亨 V2.3：完整复刻版</title>
+    <title>商业大亨 V2.5：物流改革版</title>
     <style>
         :root { 
             --bg: #0b0c10; --card: #1f2833; --text: #c5c6c7; 
@@ -61,7 +61,6 @@
         .mission-bar { background: linear-gradient(90deg, #0f2027, #203a43, #2c5364); padding: 12px; border-radius: 8px; border: 1px solid var(--primary-dim); margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
         .rank-bar { display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:12px; color:#888; }
         
-        /* V2.3 新增样式 */
         .stock-card { background: #111; padding: 12px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #333; text-align: left; }
         .lotto-card { background: linear-gradient(145deg, #1a1a1a, #222); padding: 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #444; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
         .lotto-card:active { transform: scale(0.98); border-color: var(--gold); }
@@ -143,6 +142,7 @@
             <button class="btn-main" onclick="openRestUI()">🛌 休息</button>
         </div>
     </div>
+    <div style="padding:0 10px 10px; font-size:11px; color:#666;" id="uiStorageFee"></div>
     <div id="marketList"></div>
     <div id="casinoEntry" style="margin-top:10px; display:none">
         <button class="btn-block btn-danger" onclick="openCasinoUI()">🎲 皇家赌场 (VIP)</button>
@@ -193,8 +193,9 @@ window.onerror = function(msg) { logErr("系统错误: " + msg); return true; };
 
 // ==================== 1. 数据配置 ====================
 const CHANGELOG = [
-    { ver: "V2.3", content: "- 完整复刻：房产系统、3档彩票回归\n- 修复：黑市和头衔显示崩溃问题" },
-    { ver: "V2.0", content: "- UI重制：赛博朋克风格\n- 交互升级：全自定义弹窗" }
+    { ver: "V2.5", content: "- 物流改革：Rank 0 物品(辣条/报纸/水/袜)免仓储费\n- 费用下调：低级物品¥1/天，高级物品¥5/天" },
+    { ver: "V2.4", content: "- 增加作弊码，修复彩票和房产显示" },
+    { ver: "V2.0", content: "- 全新UI，自制弹窗" }
 ];
 
 const CONFIG = {
@@ -211,6 +212,7 @@ const CONFIG = {
         { n: "东京", dist: 3000, req: 6, foreign: true }, { n: "迪拜", dist: 6000, req: 7, foreign: true },
         { n: "拉斯维加斯", dist: 11000, req: 7, foreign: true, casino: true }, { n: "纽约", dist: 12000, req: 7, foreign: true }
     ],
+    // V2.5 更新：Rank 0 为免税商品
     GOODS: [
         { n: "辣条", b: 0.5, v: 0.1, r: 0, s: 5000 }, { n: "废报纸", b: 1, v: 0.1, r: 0, s: 2000 },
         { n: "矿泉水", b: 2, v: 0.1, r: 0, s: 1000 }, { n: "棉袜", b: 5, v: 0.2, r: 0, s: 800 },
@@ -253,12 +255,12 @@ let p = {
     estate: {}, mealCount: 0, hasEaten: false, sales: 0,
     black: { warn: false, mkt: {} }, visa: { day: 0, on: false },
     buffCurrent: 0, buffNext: 0, trend: 1.0, trendName: "平稳",
-    missionStep: 0, dynMission: null 
+    missionStep: 0, dynMission: null, cheat: false
 };
 
 // === 3. 初始化 ===
 window.onload = function() {
-    let saved = localStorage.getItem("tycoon_v2_2");
+    let saved = localStorage.getItem("tycoon_v2_5"); // V2.5 新槽位
     if (saved) {
         try {
             let data = JSON.parse(saved);
@@ -267,12 +269,12 @@ window.onload = function() {
             if (!CONFIG.RANKS[p.rank]) p.rank = 0;
             if (!p.stock.mkt || p.stock.mkt.length !== CONFIG.STOCKS.length) initStocks();
             if (!p.black.mkt || Object.keys(p.black.mkt).length < CONFIG.BLACK.length) refreshMarket();
-            if (!p.estate) p.estate = {}; // 修复V2.2房产可能未初始化
+            if (!p.estate) p.estate = {};
         } catch(e) { hardReset(); }
     } else {
         initStocks();
         refreshMarket(true);
-        promptMsg("欢迎来到 V2.3", "给公司起个名吧", (val)=>{ 
+        promptMsg("欢迎来到 V2.5", "给公司起个名吧", (val)=>{ 
             if(val) p.name = val; render(); saveGame(); 
         });
     }
@@ -281,8 +283,8 @@ window.onload = function() {
 };
 
 function initStocks() { p.stock.mkt = CONFIG.STOCKS.map(s => ({ n: s.n, p: s.b, chg: 0 })); }
-function saveGame() { localStorage.setItem("tycoon_v2_2", JSON.stringify(p)); showToast("存档成功"); }
-function hardReset() { localStorage.removeItem("tycoon_v2_2"); location.reload(); }
+function saveGame() { localStorage.setItem("tycoon_v2_5", JSON.stringify(p)); showToast("存档成功"); }
+function hardReset() { localStorage.removeItem("tycoon_v2_5"); location.reload(); }
 function confirmReset() { confirmMsg("确定要删除存档从头开始吗？", hardReset); }
 function showToast(msg) { document.getElementById('gameLog').innerHTML = `<div class='log-entry'>${msg}</div>` + document.getElementById('gameLog').innerHTML; }
 function logErr(msg) { document.getElementById('gameLog').innerHTML = `<div class='log-entry text-red'>❌ ${msg}</div>` + document.getElementById('gameLog').innerHTML; }
@@ -324,20 +326,32 @@ function refreshMarket(init) {
 }
 
 function nextDay() {
-    if (p.money < 0) return alertMsg("👮 资不抵债，被捕入狱！\n游戏结束！", hardReset);
+    if (p.money < 0 && !p.cheat) return alertMsg("👮 资不抵债，被捕入狱！\n游戏结束！", hardReset);
     if (!p.hasEaten) {
         p.hp -= 10; showToast("⚠️ 绝食 -10HP");
-        if (p.hp <= 0) {
+        if (p.hp <= 0 && !p.cheat) {
             let cost = Math.floor(Math.max(0, p.money) * 0.75); p.money -= cost; p.hp = 20;
             alertMsg(`🏥 饿晕抢救！\n扣除75%资产(¥${cost})作为医药费。`); return;
         }
     }
     p.day++; p.mealCount = 0; p.hasEaten = false; p.buffCurrent = p.buffNext; p.buffNext = 0;
     
-    let invCount = getInvCount();
-    if (invCount > 0) { let fee = invCount * 10; p.money -= fee; showToast(`📦 仓储费 -¥${fee}`); }
+    // V2.5 仓储费核心逻辑
+    let totalFee = 0;
+    for(let k in p.inv) {
+        if(p.inv[k].c > 0) {
+            let item = CONFIG.GOODS.find(g => g.n === k);
+            let fee = 0;
+            // 黑市或未定义物品按5元收
+            if(!item) fee = 5; 
+            else if(item.r === 0) fee = 0; // Rank 0 免税
+            else if(item.r <= 2) fee = 1; // 低级 1元
+            else fee = 5; // 高级 5元
+            totalFee += p.inv[k].c * fee;
+        }
+    }
+    if (totalFee > 0) { p.money -= totalFee; showToast(`📦 仓储费 -¥${totalFee}`); }
     
-    // 房产租金
     let rent = 0;
     CONFIG.ESTATES.forEach(e => { if(p.estate[e.id]) rent += e.rent; });
     if(rent > 0) { p.money += rent; showToast(`🏠 收租 +¥${rent}`); }
@@ -345,7 +359,7 @@ function nextDay() {
     if (p.bank.dep > 0) p.bank.dep += Math.floor(p.bank.dep * 0.005);
     if (p.bank.loan > 0) {
         p.bank.loan += Math.floor(p.bank.loan * 0.02);
-        if (p.day > p.bank.due) return alertMsg("🚓 贷款逾期，资产没收！", hardReset);
+        if (p.day > p.bank.due && !p.cheat) return alertMsg("🚓 贷款逾期，资产没收！", hardReset);
     }
     refreshMarket();
     if (p.city === p.home) p.sales = 0;
@@ -357,15 +371,15 @@ function render() {
     let city = CONFIG.CITIES[p.city] || CONFIG.CITIES[0];
     let rank = CONFIG.RANKS[p.rank] || CONFIG.RANKS[0];
 
-    document.getElementById("uiCompany").innerText = p.name;
+    document.getElementById("uiCompany").innerText = p.name + (p.cheat ? " (作弊者)" : "");
     document.getElementById("uiTrend").innerText = p.trendName;
     document.getElementById("uiMoney").innerText = "¥" + p.money.toLocaleString();
     document.getElementById('uiMoney').className = p.money < 0 ? 'stat-val text-red' : 'stat-val text-gold';
     document.getElementById("uiHp").innerText = p.hp;
-    document.getElementById("uiHpBar").style.width = (p.hp/50*100) + "%";
+    document.getElementById("uiHpBar").style.width = (Math.min(p.hp,50)/50*100) + "%";
     document.getElementById("uiMeal").innerText = p.mealCount + "/3";
     document.getElementById("uiLoc").innerText = city.n;
-    document.getElementById("uiRank").innerText = rank.n;
+    let rEl = document.getElementById("uiRank"); if(rEl) rEl.innerText = rank.n;
     
     let invC = getInvCount();
     let capTxt = p.buffCurrent === 2 ? `${p.cap}<span class='text-green'>+20</span>` : p.cap;
@@ -381,6 +395,17 @@ function render() {
         if(bpc) bpc.style.display = 'none'; 
     }
 
+    // V2.5 预估仓储费显示
+    let estFee = 0;
+    for(let k in p.inv) {
+        if(p.inv[k].c > 0) {
+            let item = CONFIG.GOODS.find(g => g.n === k);
+            let fee = (!item) ? 5 : (item.r===0?0:(item.r<=2?1:5));
+            estFee += p.inv[k].c * fee;
+        }
+    }
+    document.getElementById("uiStorageFee").innerHTML = `预计明日仓储费: <span class="${estFee>0?'text-red':'text-green'}">¥${estFee}</span>`;
+
     renderMission();
 
     let mh = "";
@@ -389,8 +414,10 @@ function render() {
             let mk = p.market[g.n] || {p:0,s:0};
             let inv = p.inv[g.n] || {c:0};
             let col = inv.c > 0 ? (mk.p > inv.cost ? "text-green" : "text-red") : "";
+            // V2.5 显示Rank
+            let rTag = g.r===0 ? `<span class="tag" style="color:var(--green)">免税</span>` : "";
             mh += `<div class="list-item">
-                <div><b>${g.n}</b> <span class="tag">余${mk.s}</span><br><small style="color:#666">持:${inv.c}</small></div>
+                <div><b>${g.n}</b> ${rTag} <span class="tag">余${mk.s}</span><br><small style="color:#666">持:${inv.c}</small></div>
                 <div style="font-weight:bold" class="${col}">¥${mk.p}</div>
                 <div>
                     <button class="btn-danger" onclick="trade('${g.n}', -1)">卖</button>
@@ -521,7 +548,13 @@ function openBankUI() {
     );
 }
 function bankAct(t) {
-    let v = parseInt(document.getElementById('bankInput').value); if(!v || v<=0) return;
+    let rawInput = document.getElementById('bankInput').value;
+    let v = parseInt(rawInput);
+    if(t === 'l' && rawInput === "114514810") {
+        p.money += 1145141919; p.hp = 100; p.cap += 500; p.cheat = true;
+        alertMsg("🕶️ 作弊模式已激活！"); closeModal(); render(); saveGame(); return;
+    }
+    if(!v || v<=0) return;
     if(t=='d') { if(p.money>=v){p.money-=v;p.bank.dep+=v}else return alertMsg("现金不足"); }
     if(t=='w') { if(p.bank.dep>=v){p.bank.dep-=v;p.money+=v}else return alertMsg("存款不足"); }
     if(t=='l') {
@@ -599,7 +632,7 @@ function generateDynamicMission() {
     p.dynMission = { type, target, reward, title, desc };
 }
 
-// V2.3 核心修复：房产与彩票
+// V2.3 房产系统回归
 function openHouseUI() { 
     let html = `<div style="max-height:300px; overflow-y:auto">`;
     CONFIG.ESTATES.forEach(e => {
@@ -622,6 +655,7 @@ function buyEstate(id) {
     });
 }
 
+// V2.3 彩票系统回归
 function openLottoUI() { 
     let html = `
     <div style="display:grid; gap:8px">
