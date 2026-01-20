@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>商业大亨 V1.0:正式版</title>
+    <title>商业大亨 V1.0：正式版</title>
     <style>
         :root { --bg: #0f1115; --panel: #161b22; --border: #30363d; --primary: #58a6ff; --green: #2ea043; --red: #da3633; --gold: #e3b341; --text: #c9d1d9; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -26,6 +26,7 @@
         .btn-danger { background: var(--red); border-color: var(--red); }
         .btn-success { background: var(--green); border-color: var(--green); }
         .btn-gold { background: var(--gold); color: #000; border-color: var(--gold); }
+        .btn-info { background: #00bcd4; color: #000; border-color: #00bcd4; }
         .btn-sm { padding: 4px 8px; font-size: 12px; }
         .btn-block { width: 100%; padding: 12px; margin-bottom: 5px; }
 
@@ -44,6 +45,12 @@
         .text-up { color: var(--green); } .text-down { color: var(--red); }
         .tag { font-size: 10px; padding: 1px 4px; border-radius: 3px; margin-left: 4px; background: #333; color: #aaa; }
         .tag-lock { background: #3a0000; color: #ff5252; border: 1px solid #ff5252; }
+        
+        /* 帮助文本样式 */
+        .help-section { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #333; }
+        .help-title { color: var(--gold); font-weight: bold; margin-bottom: 5px; display: block; }
+        .help-list { margin: 0; padding-left: 20px; font-size: 13px; color: #ccc; }
+        .help-list li { margin-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -102,6 +109,7 @@
 </div>
 
 <div class="panel">
+    <button class="btn-block btn-info" onclick="openHelpUI()">📖 游戏说明书 (新手必读)</button>
     <div style="display:flex; gap:5px; margin-bottom:10px;">
         <button class="btn-sm" style="flex:1" onclick="saveGame()">保存</button>
         <button class="btn-sm" style="flex:1" onclick="exportSave()">导出</button>
@@ -112,7 +120,7 @@
 </div>
 
 <script>
-// === 配置数据 ===
+// === 1. 数据配置 ===
 const CONFIG = {
     RANKS: [
         { n: "摊贩", cost: 0, limit: 100 }, { n: "小卖部", cost: 3000, limit: 3000 },
@@ -161,12 +169,12 @@ let p = {
 
 window.onload = function() {
     try {
-        let saved = localStorage.getItem("tycoon_v92");
+        let saved = localStorage.getItem("tycoon_v94");
         if (saved) {
             let data = JSON.parse(saved);
             p = { ...p, ...data };
-            if (p.city >= CONFIG.CITIES.length || p.city < 0) p.city = 0;
-            if (p.rank >= CONFIG.RANKS.length) p.rank = 0;
+            if (p.city >= CONFIG.CITIES.length || p.city < 0 || !CONFIG.CITIES[p.city]) p.city = 0;
+            if (p.rank >= CONFIG.RANKS.length || p.rank < 0 || !CONFIG.RANKS[p.rank]) p.rank = 0;
             if (!p.stock.mkt || p.stock.mkt.length !== CONFIG.STOCKS.length) initStocks();
         } else {
             initStocks();
@@ -266,6 +274,37 @@ function nextDay() {
     return true;
 }
 
+// === 新增：游戏说明书 ===
+function openHelpUI() {
+    let h = `
+        <div class="help-section">
+            <span class="help-title">❤️ 生存与死亡</span>
+            <ul class="help-list">
+                <li><b>生命值(HP):</b> 归零时会晕倒，强制扣除75%资产作为抢救费。</li>
+                <li><b>吃饭:</b> 每天必须在“休息”里吃饭。不吃饭第二天扣10HP。</li>
+                <li><b>霸王餐:</b> 资产<10元强行吃饭会扣1000元(变负债)，必须当天还清，否则游戏结束。</li>
+            </ul>
+        </div>
+        <div class="help-section">
+            <span class="help-title">💰 贸易与头衔</span>
+            <ul class="help-list">
+                <li><b>低买高卖:</b> 每个城市物价不同，倒卖是发家致富的基础。</li>
+                <li><b>头衔:</b> 升级头衔可解锁更多高级商品和城市，提高外地交易限额。</li>
+                <li><b>外地限额:</b> 在非基地城市卖货有金额上限，回基地可重置。</li>
+            </ul>
+        </div>
+        <div class="help-section">
+            <span class="help-title">🏦 金融与风险</span>
+            <ul class="help-list">
+                <li><b>贷款:</b> 30天期限。若逾期未还，游戏直接失败！未还清前不可再贷。</li>
+                <li><b>黑市:</b> 高利润但有几率被捕(直接删档)。可购买保护伞降低风险。</li>
+                <li><b>房产:</b> 购买后每天自动获得租金收入(躺赚)。</li>
+            </ul>
+        </div>
+    `;
+    showModal("📖 新手指南", h);
+}
+
 // === 吃饭 ===
 function openRestUI() {
     let nextTxt = p.hasEaten ? "📅 下一天 (已吃)" : "📅 下一天 (未吃 -10HP)";
@@ -308,7 +347,7 @@ function doEat(type) {
 
 function doNextDay() { closeModal(); nextDay(); }
 
-// === 银行 (V9.2 贷款限制修复) ===
+// === 银行 ===
 function openBankUI() {
     let dueInfo = p.bank.loan > 0 ? `<br>还款倒计时: <b style="color:${(p.bank.due-p.day)<=3?'red':'#888'}">${p.bank.due - p.day}天</b>` : "";
     showModal("🏦 瑞士银行", 
@@ -322,10 +361,9 @@ function bk(t) {
     if(t=='d') { if(p.money>=v){p.money-=v;p.bank.dep+=v}else return alert("钱不够"); }
     if(t=='w') { if(p.bank.dep>=v){p.bank.dep-=v;p.money+=v}else return alert("存不够"); }
     if(t=='l') {
-        // V9.2 核心修复：禁止二次贷款
         if (p.bank.loan > 0) return alert("大笨蛋"); 
         if(v > p.money*5) return alert("信用不足");
-        p.bank.due = p.day + 30; // 只有这里会设置日期
+        p.bank.due = p.day + 30; 
         p.money += v; p.bank.loan += v;
         showToast("贷款成功");
     }
@@ -403,8 +441,8 @@ function lotto(c, m) {
 // === 渲染 ===
 function render() {
     try {
-        let city = CONFIG.CITIES[p.city];
-        let rank = CONFIG.RANKS[p.rank];
+        let city = CONFIG.CITIES[p.city] || CONFIG.CITIES[0];
+        let rank = CONFIG.RANKS[p.rank] || CONFIG.RANKS[0];
 
         document.getElementById("uiCompany").innerText = p.name;
         document.getElementById("uiMoney").innerText = "¥" + p.money.toLocaleString();
@@ -450,7 +488,7 @@ function render() {
         });
         document.getElementById("marketList").innerHTML = mh;
 
-        // 城市
+        // 城市 (修复锁)
         let ch = "";
         CONFIG.CITIES.forEach((c, i) => {
             if (i !== p.city) {
@@ -545,9 +583,9 @@ function showModal(t, c, f) { document.getElementById('mTitle').innerText=t; doc
 function closeModal() { document.getElementById('gameModal').style.display='none'; }
 function showToast(m) { document.getElementById('gameLog').innerHTML=`<div>> ${m}</div>`+document.getElementById('gameLog').innerHTML; }
 function logErr(m) { document.getElementById('gameLog').innerHTML=`<div class='err-msg'>❌ ${m}</div>`+document.getElementById('gameLog').innerHTML; }
-function saveGame() { localStorage.setItem("tycoon_v92", JSON.stringify(p)); showToast("已存档"); }
-function loadGame() { return localStorage.getItem("tycoon_v92"); }
-function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v92"); location.reload(); } }
+function saveGame() { localStorage.setItem("tycoon_v94", JSON.stringify(p)); showToast("已存档"); }
+function loadGame() { return localStorage.getItem("tycoon_v94"); }
+function hardReset() { if(confirm("确定重置？")) { localStorage.removeItem("tycoon_v94"); location.reload(); } }
 function getInvCount() { let c=0; for(let k in p.inv) if(!CONFIG.BLACK.find(b=>b.n===k)) c+=p.inv[k].c; return c; }
 function expandCap() { let c=p.cap*100; if(p.money>=c){p.money-=c;p.cap+=10;render();saveGame();} }
 function goHome(f) { travel(p.home, 0, f); }
@@ -558,4 +596,3 @@ function promote() { let next=CONFIG.RANKS[p.rank+1]; if(p.money>=next.cost){p.m
 </script>
 </body>
 </html>
-
